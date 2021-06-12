@@ -110,17 +110,7 @@ from queue import Queue
 # print('All threads closed - shutting down')
 # #fn.interfacing.shutdown()
 # print('<shutdown>')
-
-def updates():
-    ret = None
-    text = fn.interfacing.aptUpdate()
-    var = text[text.rfind('packages')-2]
-    if var == 'l':
-        ret = 0
-    elif int(var) == -3:
-        ret = -1
-    else:
-        ret = int(var)
-    return ret
-
-print(updates())
+gpi = fn.ghardware()
+while True:
+    print(gpi.pcStatus())
+    time.sleep(1)

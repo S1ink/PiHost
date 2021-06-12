@@ -7,7 +7,6 @@
 #include <thread>
 #include <ctime>
 #include <chrono>
-
 #include <stdio.h>
 #include <cstdio>
 #include <memory>
@@ -23,7 +22,7 @@ constexpr int p_status = 25;
 
 constexpr char newline = '\n';
 
-namespace sysinfo {
+namespace info {
 	float cputemp();
 	float gputemp();
 	time_t now();
@@ -46,5 +45,4 @@ namespace gpio {
 	int getSwitch();
 	void activateSwitch(int id);
 	void init();
-	void gpio1();
 }

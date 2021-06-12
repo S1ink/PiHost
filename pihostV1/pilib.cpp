@@ -1,13 +1,12 @@
 #include "pilib.h"
 
-namespace sysinfo {
+namespace info {
     float cputemp() {
         float systemp;
         FILE* thermal;
-        int n;
-
+        
         thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-        n = fscanf(thermal, "%f", &systemp);
+        fscanf(thermal, "%f", &systemp);
         fclose(thermal);
         systemp /= 1000;
 
@@ -108,37 +107,20 @@ namespace gpio {
         gpioWrite(gpiodevice, 0);
     }
 
-    void init() {
-        gpioInitialise();
-        gpioSetMode(p_switch, PI_INPUT);
-        gpioSetMode(p_power, PI_OUTPUT);
-        gpioSetMode(p_reset, PI_OUTPUT);
-        gpioSetMode(p_status, PI_INPUT);
-        gpioSetPullUpDown(p_status, PI_PUD_UP);
-        gpioSetPullUpDown(p_switch, PI_PUD_UP);
-        gpioHardwarePWM(18, 25000, 500000);
-        return;
+    void setNoctua(int percent) {
+        int speed = 10000*percent;
+        gpioHardwarePWM(p_fan, 25000, speed);
     }
 
-    void gpio1() {
-        int var;
-        gpio::init();
-        printf("Fan started\n");
-        while (true) {
-            printf("Enter a number: ");
-            std::cin >> var;
-            if (var == 1) {
-                activateSwitch(p_power);
-                printf("Activated power switch\n");
-            }
-            else if (var == 0) {
-                std::cout << getStatus() << std::endl;
-            }
-            else if (var == -1) {
-                break;
-            }
-        }
-        gpioTerminate();
+    void init() {
+        gpioInitialise();
+        gpioSetMode(p_power, PI_OUTPUT);
+        gpioSetMode(p_reset, PI_OUTPUT);
+        gpioSetMode(p_switch, PI_INPUT);
+        gpioSetMode(p_status, PI_INPUT);
+        //gpioSetPullUpDown(p_status, PI_PUD_UP);
+        //gpioSetPullUpDown(p_switch, PI_PUD_UP);
+        gpioHardwarePWM(p_fan, 25000, 500000);
         return;
     }
 }
