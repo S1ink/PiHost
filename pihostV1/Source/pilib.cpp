@@ -44,7 +44,9 @@ namespace info {
 
     char* dateStamp() {
         time_t now = time(0);
-        return util::returnCut(ctime(&now));
+        char* t = ctime(&now);
+        t[strlen(t) - 1] = '\0';
+        return t;
     }
 
     double perf_timer(time_t start) {
@@ -77,18 +79,30 @@ namespace util {
     char* returnCut(char* text) {
         char* t = text;
         for (int i = 1; i < 3; i++) {
-            if (t[strlen(t) - i] == '\n' || '\0') {
-                t[strlen(t) - i] = ' ';
+            if (t[strlen(t) - i] == '\n') {
+                t[strlen(t) - i] = '\0';
             }
         }
         return t;
     }
 
-    void appLog(std::string file, std::string text) {
+    void gLog(std::string file, std::string text) {
         std::fstream log;
         log.open(file, std::ios::out | std::ios::app);
         log << text;
         log.close();
+    }
+
+    void util::logger::log(std::string text) {
+        scribe.open(path, modes);
+        scribe << text;
+        scribe.close();
+    }
+
+    void util::logger::stampedLog(std::string text) {
+        scribe.open(path, modes);
+        scribe << info::dateStamp() << text;
+        scribe.close();
     }
 }
 

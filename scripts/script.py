@@ -19,7 +19,7 @@ def moniter(flag:Queue=q):
             scribe.timedLog(f'High CPU temp of {temp}')
         time.sleep(monitering)
 
-#start of activity
+#start of executed code
 scribe.timedLog('Startup')
 
 end = threading.Thread(target=gpi0.waitButton)

@@ -21,6 +21,7 @@ constexpr int p_reset = 24;
 constexpr int p_status = 25;
 
 constexpr char newline = '\n';
+constexpr char csvsep = ',';
 
 namespace info {
 	float cputemp();
@@ -37,7 +38,17 @@ namespace info {
 namespace util {
 	std::string exec(std::string command);
 	char* returnCut(char* text);
-	void appLog(std::string file, std::string text);
+	void gLog(std::string file, std::string text);
+	class logger {
+	private:
+		std::fstream scribe;
+		std::string path;
+		std::ios_base::openmode modes;
+	public:
+		logger(const char* path, std::ios_base::openmode modes) : path(path), modes(modes) {};
+		void log(std::string text);
+		void stampedLog(std::string text);
+	};
 }
 
 namespace gpio {
@@ -45,4 +56,5 @@ namespace gpio {
 	int getSwitch();
 	void activateSwitch(int id);
 	void init();
+	void setNoctua(int percent);
 }

@@ -3,6 +3,7 @@
 #include "pilib.h"
 
 void gpio1();
+void gpio2();
 int gpioDebugMode(bool dinit = false);
 
 namespace db {
