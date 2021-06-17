@@ -24,6 +24,105 @@ namespace info {
         return temp;
     }
 
+    namespace cpu {
+        size_t getIdle(const LineParse& data) {
+            return data.time[3] + data.time[4];
+        }
+
+        size_t getActive(const LineParse& data) {
+            return data.time[0] + data.time[1] + data.time[2] + data.time[5] + data.time[6] + data.time[7] + data.time[8] + data.time[9];
+        }
+
+        void readMain(LineParse& container) {
+            std::ifstream reader(locations::stats::cpu);
+
+            reader >> container.title;
+            for (int i = 0; i < parsable_states; i++) {
+                reader >> container.time[i];
+            }
+            reader.close();
+        }
+
+        void readVector(std::vector<LineParse>& container) {
+            std::ifstream reader(locations::stats::cpu);
+            std::string linebuffer;
+
+            while (std::getline(reader, linebuffer)) {
+                if (!linebuffer.compare(0, 3, "cpu")) {
+                    std::istringstream stream(linebuffer);
+
+                    container.emplace_back(LineParse());
+                    LineParse& line = container.back();
+
+                    stream >> line.title;
+
+                    for (int i = 0; i < parsable_states; i++) {
+                        stream >> line.time[i];
+                    }
+                }
+            }
+            reader.close();
+        }
+
+        void convertData(LineParse& snapshot1, LineParse& snapshot2, ActivityData& output) {
+            float active = static_cast<float>(getActive(snapshot2) - getActive(snapshot1));
+            float idle = static_cast<float>(getIdle(snapshot2) - getIdle(snapshot1));
+            float total = active + idle;
+            output.title = snapshot1.title;
+            output.activity = 100.f * (active / total);
+        }
+
+        void convertVectorData(std::vector<LineParse>& snapshot1, std::vector<LineParse>& snapshot2, std::vector<ActivityData>& output) {
+            float active, idle, total;
+
+            for (int i = 0; i < snapshot1.size(); i++) {
+                output.emplace_back(ActivityData());
+                ActivityData& entry = output.back();
+
+                active = static_cast<float>(getActive(snapshot2[i]) - getActive(snapshot1[i]));
+                idle = static_cast<float>(getIdle(snapshot2[i]) - getIdle(snapshot1[i]));
+                total = active + idle;
+
+                entry.title = snapshot1[i].title;
+                entry.activity = 100.f * (active / total);
+            }
+        }
+
+        void takeSample(std::vector<LineParse>& vector1, std::vector<LineParse>& vector2, std::vector<ActivityData>& result, unsigned int sample_interval) {
+            vector1.clear();
+            vector2.clear();
+            result.clear();
+            readVector(vector1);
+            sleep(sample_interval);
+            readVector(vector2);
+            convertVectorData(vector1, vector2, result);
+        }
+
+        float getPercent(unsigned int wait) {
+            LineParse time1, time2;
+            readMain(time1);
+            sleep(wait);
+            readMain(time2);
+            float active = static_cast<float>(getActive(time2) - getActive(time1));
+            float total = active + (static_cast<float>(getIdle(time2) - getIdle(time1)));
+            return 100.f * (active / total);
+        }
+    }
+
+    Cpu::Cpu(unsigned int sample_time) : sample_rate(sample_time) {
+        sample1.reserve(5);
+        sample2.reserve(5);
+        result.reserve(5);
+    }
+
+    std::vector<info::cpu::ActivityData>& Cpu::getSample() {
+        sample1.clear();
+        sample2.clear();
+        result.clear();
+        info::cpu::takeSample(sample1, sample2, result);
+        return result;
+    }
+
     time_t now() {
         return time(NULL);
     }
@@ -76,7 +175,7 @@ namespace util {
         return result;
     }
 
-    char* returnCut(char* text) {
+    char* cutNewline(char* text) {
         char* t = text;
         for (int i = 1; i < 3; i++) {
             if (t[strlen(t) - i] == '\n') {
@@ -86,7 +185,7 @@ namespace util {
         return t;
     }
 
-    void gLog(std::string file, std::string text) {
+    void singleLog(std::string file, std::string text) {
         std::fstream log;
         log.open(file, std::ios::out | std::ios::app);
         log << text;
