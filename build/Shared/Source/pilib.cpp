@@ -4,7 +4,7 @@ namespace info {
     float cputemp() {
         float systemp;
         FILE* thermal;
-        
+
         thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
         fscanf(thermal, "%f", &systemp);
         fclose(thermal);
@@ -152,44 +152,102 @@ namespace info {
         return difftime(time(0), start);
     }
 
-    double elapsed_time(std::chrono::time_point<std::chrono::system_clock> start) {
+    double elapsed_time(std::chrono::time_point<std::chrono::system_clock>& start) {
         std::chrono::duration<double> diff = std::chrono::system_clock::now() - start;
         return diff.count();
     }
 }
 
 namespace util {
-    std::string exec(std::string command) {
+    std::string exec(const char* command) {
         char buffer[128];
         std::string result = "";
-        FILE* pipe = popen(command.c_str(), "r");
+        FILE* pipe = popen(command, "r");
         if (!pipe) {
-            return "popen function failed";
+            result.append("popen function failed");
+            pclose(pipe);
+            return result;
         }
         while (!feof(pipe)) {
             if (fgets(buffer, 128, pipe) != NULL) {
-                result += buffer;
+                result.append(buffer);
             }
         }
         pclose(pipe);
         return result;
     }
 
+    std::string rsync(const char* source, const char* destination, const char* options) {
+        std::stringstream command;
+        char buffer[128];
+        std::string output = "";
+        command << "sudo rsync " << options << space << source << space << destination;
+        FILE* pipe = popen(command.str().c_str(), "r");
+        if (!pipe) {
+            output.append("popen function failed");
+            pclose(pipe);
+            return output;
+        }
+        while (!feof(pipe)) {
+            if (fgets(buffer, 128, pipe) != NULL) {
+                output.append(buffer);
+            }
+        }
+        pclose(pipe);
+        return output;
+    }
+
+    std::string rclone(const char* source, const char* destination, const char* mode) {
+        std::stringstream command;
+        char buffer[128];
+        std::string output = "";
+        command << "rclone " << mode << space << source << space << destination << " -vv";
+        FILE* pipe = popen(command.str().c_str(), "r");
+        if (!pipe) {
+            output.append("popen function failed");
+            pclose(pipe);
+            return output;
+        }
+        while (!feof(pipe)) {
+            if (fgets(buffer, 128, pipe) != NULL) {
+                output.append(buffer);
+            }
+        }
+        pclose(pipe);
+        return output;
+    }
+
+    void s_rsync(const char* source, const char* destination, const char* options) {
+        std::stringstream command;
+        command << "sudo rsync " << options << space << source << space << destination;
+        system(command.str().c_str());
+    }
+
+    void s_rclone(const char* source, const char* destination, const char* mode) {
+        std::stringstream command;
+        command << "rclone "  << mode << space << source << space << destination;
+        system(command.str().c_str());
+    }
+
     char* cutNewline(char* text) {
         char* t = text;
         for (int i = 1; i < 3; i++) {
-            if (t[strlen(t) - i] == '\n') {
-                t[strlen(t) - i] = '\0';
+            if (t[-i] == '\n') {
+                t[-i] = '\0';
             }
         }
         return t;
     }
 
-    void singleLog(std::string file, std::string text) {
+    void quickLog(std::string file, std::string text) {
         std::fstream log;
         log.open(file, std::ios::out | std::ios::app);
         log << text;
         log.close();
+    }
+
+    void debug(const char* identifier) {
+        std::cout << "DEBUG: " << identifier << newline;
     }
 
     void util::logger::log(std::string text) {
@@ -205,13 +263,90 @@ namespace util {
     }
 }
 
+namespace files {
+    namespace csv {
+        Csv csvRead(const char* filepath) {
+            files::csv::Csv data;
+            std::ifstream reader(filepath);
+            std::string linebuffer, segmentbuffer;
+
+            while (std::getline(reader, linebuffer)) {
+                data.emplace_back(Line());
+                Line* line = &(data.back());
+                std::istringstream linestream(linebuffer);
+
+                while (std::getline(linestream, segmentbuffer, ',')) {
+                    line->emplace_back(std::string());
+                    std::string& segment = line->back();
+                    segment = segmentbuffer;
+                }
+            }
+            reader.close();
+            return data;
+        }
+
+        void csvRead(const char* filepath, Csv& container) {
+            std::ifstream reader(filepath);
+            std::string linebuffer, segmentbuffer;
+
+            while (std::getline(reader, linebuffer)) {
+                container.emplace_back(Line());
+                Line* line = &(container.back());
+                std::istringstream linestream(linebuffer);
+
+                while (std::getline(linestream, segmentbuffer, csvd)) {
+                    line->emplace_back(std::string());
+                    std::string& segment = line->back();
+                    segment = segmentbuffer;
+                }
+            }
+            reader.close();
+            return;
+        }
+
+        bool winCheck(const char* filepath) {
+            std::ifstream reader(filepath);
+            std::string line;
+            std::getline(reader, line);
+            return (line == "name,source,destination");
+        }
+
+        void winSync(const char* filepath, std::ostream& output) {
+            std::ifstream reader(filepath);
+            std::string linebuffer;
+            WinSync databuffer;
+
+            std::getline(reader, linebuffer);
+            if (!(linebuffer == "name,source,destination,options")) {
+                output << "Instruction file is not in the correct format.\n";
+            }
+            else {
+                while (std::getline(reader, linebuffer)) {
+                    std::istringstream linestream(linebuffer);
+                    std::getline(linestream, databuffer.name, ',');
+                    std::getline(linestream, databuffer.source, ',');
+                    std::getline(linestream, databuffer.destination, ',');
+                    if (std::getline(linestream, databuffer.options)) {
+                        output << info::dateStamp() << " - Started syncing: [" << databuffer.name << "]\n\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str(), databuffer.options.c_str()) << newline;
+                    }
+                    else {
+                        output << info::dateStamp() << " - Started syncing: [" << databuffer.name << "]\n\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str()) << newline;
+                    }
+                }
+            }
+            reader.close();
+            return;
+        }
+    }
+}
+
 namespace gpio {
     int getStatus() {
-        return gpioRead(p_status);
+        return gpioRead(gpin::pc_status);
     }
 
     int getSwitch() {
-        return gpioRead(p_switch);
+        return gpioRead(gpin::pi_power);
     }
 
     void activateSwitch(int gpiodevice) {
@@ -220,20 +355,20 @@ namespace gpio {
         gpioWrite(gpiodevice, 0);
     }
 
-    void setNoctua(int percent) {
-        int speed = 10000*percent;
-        gpioHardwarePWM(p_fan, 25000, speed);
+    void setNoctua(float percent) {
+        int speed = 10000 * percent;
+        gpioHardwarePWM(gpin::pi_fan, 25000, speed);
     }
 
-    void init() {
+    void init(float fanspeed) {
         gpioInitialise();
-        gpioSetMode(p_power, PI_OUTPUT);
-        gpioSetMode(p_reset, PI_OUTPUT);
-        gpioSetMode(p_switch, PI_INPUT);
-        gpioSetMode(p_status, PI_INPUT);
+        gpioSetMode(gpin::pc_power, PI_OUTPUT);
+        gpioSetMode(gpin::pc_reset, PI_OUTPUT);
+        gpioSetMode(gpin::pc_status, PI_INPUT);
+        gpioSetMode(gpin::pi_power, PI_INPUT);
         //gpioSetPullUpDown(p_status, PI_PUD_UP);
         //gpioSetPullUpDown(p_switch, PI_PUD_UP);
-        gpioHardwarePWM(p_fan, 25000, 500000);
+        gpioHardwarePWM(gpin::pi_fan, 25000, ((int)fanspeed * 10000));
         return;
     }
 }

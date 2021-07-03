@@ -6,6 +6,8 @@
 
 #include "pigpio.h"
 
+constexpr char* version = "1.0.1";
+
 constexpr int p_fan = 18;
 constexpr int p_switch = 3;
 
@@ -55,12 +57,12 @@ static void callback(int gpio, int level, uint32_t tick) {
     logger.close();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     logger.open(logs, modes);
-    logger << dateStamp() << " : Startup" << newline;
+    logger << dateStamp() << " : System startup - PiHost version " << version << newline;
     logger.close();
     gpioInitialise();
-    gpioHardwarePWM(p_fan, 25000, 300000);
+    gpioHardwarePWM(p_fan, 25000, 400000);
     gpioSetMode(p_switch, PI_INPUT);
     gpioSetISRFunc(p_switch, RISING_EDGE, 0, callback);
     while (run) {
@@ -77,5 +79,5 @@ int main() {
     logger << dateStamp() << " : All processes ended - shutting down" << newline << newline;
     logger.close();
     system("sudo halt");
-	return 0;
+    return 0;
 }

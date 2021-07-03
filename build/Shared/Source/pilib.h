@@ -65,13 +65,19 @@ namespace info {
 	tm* _struct_now();
 	char* dateStamp();
 	double perf_timer(time_t start);
-	double elapsed_time(std::chrono::time_point<std::chrono::system_clock> start);
+	double elapsed_time(std::chrono::time_point<std::chrono::system_clock>& start);
 }
 
 namespace util {
-	std::string exec(std::string command);
+	std::string exec(const char* command);
+	std::string rsync(const char* source, const char* destination, const char* options = "-va");
+	std::string rclone(const char* source, const char* destination, const char* mode = "sync");
+	void s_rsync(const char* source, const char* destination, const char* options = "-a");
+	void s_rclone(const char* source, const char* destination, const char* mode = "sync");
 	char* cutNewline(char* text);
-	void singleLog(std::string file, std::string text);
+	void quickLog(std::string file, std::string text);
+	void debug(const char* identifier);
+
 	class logger {
 	private:
 		std::fstream scribe;
@@ -84,16 +90,30 @@ namespace util {
 	};
 }
 
-namespace gpio {
-	constexpr int p_fan = 18;
-	constexpr int p_switch = 3;
-	constexpr int p_power = 23;
-	constexpr int p_reset = 24;
-	constexpr int p_status = 25;
+namespace files {
+	namespace csv {
+		struct WinSync {
+			std::string name;
+			std::string source;
+			std::string destination;
+			std::string options;
+		};
 
+		typedef std::vector<std::string> Line;
+		typedef std::vector<Line> Csv;
+		//util::csv::Csv = 'std::vector< std::vector<std::string> >'
+
+		Csv csvRead(const char* filepath);
+		void csvRead(const char* filepath, Csv& container);
+		bool winCheck(const char* filepath);
+		void winSync(const char* filepath, std::ostream& output);
+	}
+}
+
+namespace gpio {
 	int getStatus();
 	int getSwitch();
 	void activateSwitch(int id);
-	void init();
-	void setNoctua(int percent);
+	void init(float fanspeed = 40.f);
+	void setNoctua(float percent);
 }
