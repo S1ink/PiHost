@@ -3,9 +3,8 @@
 namespace info {
     float cputemp() {
         float systemp;
-        FILE* thermal;
-
-        thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+        FILE* thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+        
         fscanf(thermal, "%f", &systemp);
         fclose(thermal);
         systemp /= 1000;
@@ -75,7 +74,7 @@ namespace info {
         void convertVectorData(std::vector<LineParse>& snapshot1, std::vector<LineParse>& snapshot2, std::vector<ActivityData>& output) {
             float active, idle, total;
 
-            for (int i = 0; i < snapshot1.size(); i++) {
+            for (unsigned int i = 0; i < snapshot1.size(); i++) {
                 output.emplace_back(ActivityData());
                 ActivityData& entry = output.back();
 
@@ -123,38 +122,17 @@ namespace info {
         return result;
     }
 
-    time_t now() {
-        return time(NULL);
-    }
-
-    std::chrono::time_point<std::chrono::system_clock> _now() {
-        return std::chrono::system_clock::now();
-    }
-
-    tm* struct_now() {
-        time_t n = time(0);
-        return localtime(&n);
-    }
-
-    tm* _struct_now() {
-        time_t n = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        return localtime(&n);
-    }
-
     char* dateStamp() {
-        time_t now = time(0);
+        time_t now = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
         char* t = ctime(&now);
-        t[strlen(t) - 1] = '\0';
+        t[strlen(t)-1] = '\0';
         return t;
     }
 
-    double perf_timer(time_t start) {
-        return difftime(time(0), start);
-    }
-
-    double elapsed_time(std::chrono::time_point<std::chrono::system_clock>& start) {
-        std::chrono::duration<double> diff = std::chrono::system_clock::now() - start;
-        return diff.count();
+    char* dateStamp(time_t* tme) {
+        char* t = ctime(tme);
+        t[strlen(t) - 1] = '\0';
+        return t;
     }
 }
 
@@ -171,6 +149,106 @@ namespace util {
         while (!feof(pipe)) {
             if (fgets(buffer, 128, pipe) != NULL) {
                 result.append(buffer);
+            }
+        }
+        pclose(pipe);
+        return result;
+    }
+
+    int aptUpdates() {
+        int result = 0;
+        char buffer[128];
+        std::string line = "";
+        FILE* pipe = popen("sudo apt update", "r");
+        if (!pipe) {
+            result = -1;
+        }
+        else {
+            while (fgets(buffer, 128, pipe)) {
+                line.append(buffer);
+                if (std::stringstream(line) >> result) {
+                    break;
+                }
+                else {
+                    line = "";
+                }
+            }
+        }
+        pclose(pipe);
+        return result;
+    }
+
+    int aptUpdates(std::ostream& out) {
+        int result = 0;
+        char buffer[128];
+        std::string line = "";
+        FILE* pipe = popen("sudo apt update", "r");
+        if (!pipe) {
+            result = -1;
+        }
+        else {
+            bool found = false;
+            while (fgets(buffer, 128, pipe)) {
+                out << buffer;
+                if (!found) {
+                    line.append(buffer);
+                    if (std::stringstream(line) >> result) {
+                        break;
+                    }
+                    else {
+                        line = "";
+                    }
+                }
+            }
+        }
+        pclose(pipe);
+        return result;
+    }
+
+    int aptUpgrade() {
+        int result = 0;
+        char buffer[128];
+        std::string line = "";
+        FILE* pipe = popen("sudo apt-get upgrade -y", "r");
+        if (!pipe) {
+            result = -1;
+        }
+        else {
+            while (fgets(buffer, 128, pipe)) {
+                line.append(buffer);
+                if (std::stringstream(line) >> result) {
+                    break;
+                }
+                else {
+                    line = "";
+                }
+            }
+        }
+        pclose(pipe);
+        return result;
+    }
+
+    int aptUpgrade(std::ostream& out) {
+        int result = 0;
+        char buffer[128];
+        std::string line = "";
+        FILE* pipe = popen("sudo apt-get upgrade -y", "r");
+        if (!pipe) {
+            result = -1;
+        }
+        else {
+            bool found = false;
+            while (fgets(buffer, 128, pipe)) {
+                out << buffer;
+                if (!found) {
+                    line.append(buffer);
+                    if (std::stringstream(line) >> result) {
+                        break;
+                    }
+                    else {
+                        line = "";
+                    }
+                }
             }
         }
         pclose(pipe);
@@ -263,6 +341,78 @@ namespace util {
     }
 }
 
+namespace timing {
+    time_t now() {
+        return CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
+    }
+
+    tm* struct_now() {
+        time_t n = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
+        return localtime(&n);
+    }
+
+    double perfTimer(CHRONO::time_point<CHRONO::high_resolution_clock>& start) {
+        CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - start;
+        return diff.count();
+    }
+
+    StopWatch::StopWatch(bool now) {
+        if (now) {
+            start = CHRONO::high_resolution_clock::now();
+        }
+    }
+
+    void StopWatch::setStart() {
+        start = CHRONO::high_resolution_clock::now();
+    }
+
+    double StopWatch::getDuration() {
+        CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - start;
+        return diff.count();
+    }
+
+    void StopWatch::pTotal() {
+        CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - start;
+        std::cout << "Total elapsed time: " << diff.count() << " seconds" << newline;
+    }
+
+    time_d createTOD(uint8_t hr, uint8_t min, uint8_t sec) {
+        return (hr * 3600) + (min * 60) + (sec);
+    }
+
+    time_d DayTime::toTOD() {
+        return (hr * 3600) + (min * 60) + (sec);
+    }
+
+    time_t d_untilNext(const DayTime tme) {
+        CHRONO::time_point<CHRONO::system_clock> now = CHRONO::system_clock::now();
+        time_t tt = CHRONO::system_clock::to_time_t(now);
+        tm t = *localtime(&tt);
+        if (t.tm_hour > tme.hr || (t.tm_hour == tme.hr && t.tm_min > tme.min) || (t.tm_hour == tme.hr && t.tm_min == tme.min && t.tm_sec > tme.sec)) {
+            tt += 86400;
+            t = *localtime(&tt);
+        }
+        t.tm_sec = tme.sec;
+        t.tm_min = tme.min;
+        t.tm_hour = tme.hr;
+        CHRONO::duration<time_t> diff = CHRONO::duration_cast<CHRONO::seconds>(CHRONO::system_clock::from_time_t(mktime(&t)) - now);
+        return diff.count() + 1;
+    }
+
+    CHRONO::time_point<CHRONO::system_clock> d_nextTime(const DayTime tme) {
+        time_t tt = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
+        tm t = *localtime(&tt);
+        if (t.tm_hour > tme.hr || (t.tm_hour == tme.hr && t.tm_min > tme.min) || (t.tm_hour == tme.hr && t.tm_min == tme.min && t.tm_sec > tme.sec)) {
+            tt += 86400;
+            t = *localtime(&tt);
+        }
+        t.tm_sec = tme.sec;
+        t.tm_min = tme.min;
+        t.tm_hour = tme.hr;
+        return CHRONO::system_clock::from_time_t(mktime(&t));
+    }
+}
+
 namespace files {
     namespace csv {
         Csv csvRead(const char* filepath) {
@@ -308,7 +458,7 @@ namespace files {
             std::ifstream reader(filepath);
             std::string line;
             std::getline(reader, line);
-            return (line == "name,source,destination");
+            return (line == "name,source,destination,options");
         }
 
         void winSync(const char* filepath, std::ostream& output) {
@@ -317,25 +467,53 @@ namespace files {
             WinSync databuffer;
 
             std::getline(reader, linebuffer);
-            if (!(linebuffer == "name,source,destination,options")) {
+            if (linebuffer != "name,source,destination,options") {
                 output << "Instruction file is not in the correct format.\n";
             }
             else {
                 while (std::getline(reader, linebuffer)) {
                     std::istringstream linestream(linebuffer);
-                    std::getline(linestream, databuffer.name, ',');
-                    std::getline(linestream, databuffer.source, ',');
-                    std::getline(linestream, databuffer.destination, ',');
+                    std::getline(linestream, databuffer.name, csvd);
+                    std::getline(linestream, databuffer.source, csvd);
+                    std::getline(linestream, databuffer.destination, csvd);
                     if (std::getline(linestream, databuffer.options)) {
-                        output << info::dateStamp() << " - Started syncing: [" << databuffer.name << "]\n\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str(), databuffer.options.c_str()) << newline;
+                        output << info::dateStamp() << " - Started syncing {" << databuffer.name << "}...\n* * * * * * * * * * *\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str(), databuffer.options.c_str()) << "* * * * * * * * * *\n\n\n";
                     }
                     else {
-                        output << info::dateStamp() << " - Started syncing: [" << databuffer.name << "]\n\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str()) << newline;
+                        output << info::dateStamp() << " - Started syncing {" << databuffer.name << "}...\n* * * * * * * * * * *\n" << util::rsync(databuffer.source.c_str(), databuffer.destination.c_str()) << "* * * * * * * * * *\n\n\n";
                     }
                 }
             }
             reader.close();
             return;
+        }
+
+        void parseTasks(const char* filepath, std::ostream& output) {
+            std::ifstream reader(filepath);
+            std::string linebuffer, numbers, numbuff;
+            TaskFile databuffer;
+
+            std::getline(reader, linebuffer);
+            if (linebuffer == "name,command,output,hr,min,sec") {
+                output << "Task file is not in the correct format.\n";
+                output << linebuffer << newline;
+            }
+            else {
+                while (std::getline(reader, linebuffer)) {
+                    std::istringstream linestream(linebuffer);
+                    std::getline(linestream, databuffer.name, csvd);
+                    std::getline(linestream, databuffer.command, csvd);
+                    std::getline(linestream, databuffer.output, csvd);
+                    std::getline(linestream, numbuff, csvd);
+                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr;}
+                    std::getline(linestream, numbuff, csvd);
+                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.min;}
+                    std::getline(linestream, numbuff, csvd);
+                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec;}
+
+                    output << databuffer.name << space << databuffer.command << space << databuffer.output << space << databuffer.tme.hr << space << databuffer.tme.min << space << databuffer.tme.sec << newline;
+                }
+            }
         }
     }
 }
@@ -366,9 +544,7 @@ namespace gpio {
         gpioSetMode(gpin::pc_reset, PI_OUTPUT);
         gpioSetMode(gpin::pc_status, PI_INPUT);
         gpioSetMode(gpin::pi_power, PI_INPUT);
-        //gpioSetPullUpDown(p_status, PI_PUD_UP);
-        //gpioSetPullUpDown(p_switch, PI_PUD_UP);
-        gpioHardwarePWM(gpin::pi_fan, 25000, ((int)fanspeed * 10000));
+        gpioHardwarePWM(gpin::pi_fan, 25000, ((int)(fanspeed * 10000)));
         return;
     }
 }

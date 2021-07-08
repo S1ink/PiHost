@@ -59,17 +59,16 @@ namespace info {
 		std::vector<info::cpu::ActivityData>& getSample();
 	};
 
-	time_t now();
-	std::chrono::time_point<std::chrono::system_clock> _now();
-	tm* struct_now();
-	tm* _struct_now();
 	char* dateStamp();
-	double perf_timer(time_t start);
-	double elapsed_time(std::chrono::time_point<std::chrono::system_clock>& start);
+	char* dateStamp(time_t* tme);
 }
 
 namespace util {
 	std::string exec(const char* command);
+	int aptUpdates();
+	int aptUpdates(std::ostream& out);
+	int aptUpgrade();
+	int aptUpgrade(std::ostream& out);
 	std::string rsync(const char* source, const char* destination, const char* options = "-va");
 	std::string rclone(const char* source, const char* destination, const char* mode = "sync");
 	void s_rsync(const char* source, const char* destination, const char* options = "-a");
@@ -90,6 +89,54 @@ namespace util {
 	};
 }
 
+namespace timing {
+	time_t now();
+	tm* struct_now();
+	double perfTimer(CHRONO::time_point<CHRONO::high_resolution_clock>& start);
+
+	class StopWatch {
+		CHRONO::time_point<CHRONO::high_resolution_clock> start;
+	public:
+		StopWatch(bool now = true);
+		void setStart();
+		double getDuration();
+		void pTotal();
+	};
+
+	typedef unsigned int time_d;
+	time_d createTOD(uint8_t hr, uint8_t min, uint8_t sec);
+	struct DayTime {
+		uint8_t hr;
+		uint8_t min;
+		uint8_t sec;
+
+		DayTime(const uint8_t hr = 0, const uint8_t min = 0, const uint8_t sec = 0) : hr(hr), min(min), sec(sec) {}
+		time_d toTOD();
+	};
+
+	time_t d_untilNext(const DayTime tme);
+	CHRONO::time_point<CHRONO::system_clock> d_nextTime(const DayTime tme);
+
+	template<typename returntype, typename... args>
+	void routineThread(volatile bool const& control, const DayTime tme, returntype(*func)(args...), args... arg) {
+		bool& con = const_cast<bool&>(control);
+		while (con) {
+			std::this_thread::sleep_until(d_nextTime(tme));
+			func(arg...);
+			std::this_thread::sleep_for(CHRONO::seconds(1));
+		}
+	}
+
+	template<typename d_rep, typename d_period, typename returntype, typename... args>
+	void loopingThread(volatile bool const& control, CHRONO::duration<d_rep, d_period> interval, returntype(*func)(args...), args... arg) {
+		bool& con = const_cast<bool&>(control);
+		while (con) {
+			std::this_thread::sleep_for(interval);
+			func(arg...);
+		}
+	}
+}
+
 namespace files {
 	namespace csv {
 		struct WinSync {
@@ -99,14 +146,24 @@ namespace files {
 			std::string options;
 		};
 
+		struct TaskFile {
+			std::string name;
+			std::string command;
+			std::string output;
+			timing::DayTime tme;
+		};
+
 		typedef std::vector<std::string> Line;
 		typedef std::vector<Line> Csv;
 		//util::csv::Csv = 'std::vector< std::vector<std::string> >'
 
 		Csv csvRead(const char* filepath);
 		void csvRead(const char* filepath, Csv& container);
+
 		bool winCheck(const char* filepath);
 		void winSync(const char* filepath, std::ostream& output);
+
+		void parseTasks(const char* filepath, std::ostream& output);
 	}
 }
 

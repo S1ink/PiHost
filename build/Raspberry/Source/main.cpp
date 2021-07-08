@@ -8,79 +8,64 @@
 //	cpustat::UtilizationData core4;
 //};
 
-static volatile bool run = true;
+volatile bool run = true;
+//volatile bool ctrl = true;
 
-static void endCondition(void) {
+static void endCondition() {
 	std::cin.get();
 	run = false;
 }
 
+//void func(int a, int b) {
+//	std::cout << info::dateStamp() << newline << "a + b = " << a + b << newline;
+//	ctrl = false;
+//	return;
+//}
+
+void work() {
+	std::cout << info::dateStamp() << ": work done?" << newline;
+}
+
 int main(int argc, char* argv[]) {
-	std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
-	//gpio::init();
-	//std::thread end(endCondition);
-	//std::thread fan(demoFan);
-
-	/*std::chrono::time_point<std::chrono::system_clock> stopwatch = std::chrono::system_clock::now();
-	info::cpu::getPercent();
-	std::cout << "CPU ACTIVITY FUNCTION TIME: " << info::elapsed_time(stopwatch) << newline;
-
-	stopwatch = std::chrono::system_clock::now();
-	info::cputemp();
-	std::cout << "CPU TEMP FUNCTION TIME: " << info::elapsed_time(stopwatch) << newline;
-
-	stopwatch = std::chrono::system_clock::now();
-	gpioInitialise();
-	std::cout << "GPIO INITIALIZATION FUNCTION TIME: " << info::elapsed_time(stopwatch) << newline;
-
-	stopwatch = std::chrono::system_clock::now();
-	gpio::setNoctua(50);
-	std::cout << "SET FAN FUNCTION TIME: " << info::elapsed_time(stopwatch) << newline;
-
-	stopwatch = std::chrono::system_clock::now();
-	compute();
-	std::cout << "BASIC COMPUTATION TIME: " << info::elapsed_time(stopwatch) << newline;*/
-
-	//util::csv::Csv example = util::csv::csvRead("/data/pihost/example.csv");
-	//std::cout << (example)[0][1] << newline;
-
-	//std::cout << util::rclone("/data/pihost/tasks.txt", "/data/") << newline;
+	timing::StopWatch runtime;
 	
-	//std::cout << util::rclone("/data/pihost/tasks.txt", "/data/") << newline;
-	//util::s_rclone("/data/pihost/tasks.txt", "/data/");
+	/*std::thread timed(timing::routineThread<void>, std::ref(run), timing::DayTime(17, 55, 0), work);
+	endCondition();
+	timed.join();*/
 
-	//files::csv::csvSync("/data/pihost/backups.csv");
-	//util::rsync("/data/pihost/tasks.txt", "/data/");
+	//std::cout << "updates: " << util::aptUpdates(std::cout) << newline;
+	//std::cout << "upgrades: " << util::aptUpgrade(std::cout) << newline;
 
-	std::string path = "/data/pihost/rsyncbackup.csv";
-	//files::csv::Csv data;
-	//data.reserve(5);
+	/*int num1;
+	int num2;
+	int num3;
 
-	//files::csv::csvRead(path.c_str(), data);
+	std::string numbuff, numbers = "10,-157,83989\n";
+	std::istringstream line(numbers);
 
-	//std::cout << files::csv::winCheck(path.c_str()) << newline;
-
-	//for (unsigned int i = 0; i < data.size(); i++) {
-	//	//std::cout << i << newline;
-	//	//std::cout << (data[i]).size() << newline;
-	//	for (unsigned int j = 0; j < data[i].size(); j++) {
-	//		//std::cout << j;
-	//		std::cout << "line " << i << ", section " << j << " - " << data[i][j] << newline;
-	//	}
-	//}
-	std::ofstream output("/data/logs/testrun.txt");
-	files::csv::winSync(path.c_str(), output);
-
-	while (run) {
-		//std::cout << "CPU: {" << info::cputemp() << "*C | " << info::cpu::getPercent() << "%}" << newline;
-		break;
+	std::getline(line, numbuff, csvd);
+	{
+		std::istringstream num(numbuff);
+		num >> num1;
+	}
+	std::getline(line, numbuff, csvd);
+	{
+		std::istringstream num(numbuff);
+		num >> num2;
+	}
+	std::getline(line, numbuff, csvd);
+	{
+		std::istringstream num(numbuff);
+		num >> num3;
 	}
 
-	//end.join();
-	//fan.join();
-	//gpio::setNoctua(50);
-	//gpioTerminate();
-	std::cout << "Total elapsed time: " << info::elapsed_time(start) << " seconds" << newline;
+	std::cout << num1 << newline;
+	std::cout << num2 << newline;
+	std::cout << num3 << newline;*/
+
+	files::csv::parseTasks("/data/pihost/tasks.csv", std::cout);
+
+	runtime.pTotal();
 	return 0;
 }
 

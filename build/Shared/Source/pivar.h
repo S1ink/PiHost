@@ -1,6 +1,8 @@
 //IMPORTANT VARIABLES TO BE INCLUDED WHERE NECESSARY
-
 #pragma once
+
+#define CHRONO std::chrono
+#define CE_STRING constexpr char const*
 
 constexpr char newline = 10;	// ('/n')
 constexpr char space = 32;		// (' ')
@@ -8,11 +10,11 @@ constexpr char csvd = 44;		// (',')
 
 namespace locations {
 	namespace stats {
-		constexpr char* cpu = "/proc/stat";
-		constexpr char* network = "/proc/net/dev";
-		constexpr char* load = "/proc/loadavg";
-		constexpr char* disk = "/proc/diskstats";
-		constexpr char* mem = "/proc/meminfo";
+		CE_STRING cpu = "/proc/stat";
+		CE_STRING network = "/proc/net/dev";
+		CE_STRING load = "/proc/loadavg";
+		CE_STRING disk = "/proc/diskstats";
+		CE_STRING mem = "/proc/meminfo";
 	}
 }
 

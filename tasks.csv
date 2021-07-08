@@ -1,0 +1,3 @@
+name,command,output,hr,min,sec
+apt,@apt,/data/logs/apt_log.txt,0,0,0
+winbackup,@winbackup,/data/logs/winsync.txt,16,0,0
