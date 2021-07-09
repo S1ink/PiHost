@@ -307,14 +307,16 @@ namespace util {
         system(command.str().c_str());
     }
 
-    char* cutNewline(char* text) {
-        char* t = text;
-        for (int i = 1; i < 3; i++) {
-            if (t[-i] == '\n') {
-                t[-i] = '\0';
+    unsigned char clearEnd(std::string& str) {
+        unsigned char ret = null;
+        unsigned int len = str.length();
+        for (unsigned char i = 1; i < 3; i++) {
+            if (str[len-i] == 13 || str[len-i] == 10) {
+                ret = str[len-i];
+                str.pop_back();
             }
         }
-        return t;
+        return ret;
     }
 
     void quickLog(std::string file, std::string text) {
@@ -322,10 +324,6 @@ namespace util {
         log.open(file, std::ios::out | std::ios::app);
         log << text;
         log.close();
-    }
-
-    void debug(const char* identifier) {
-        std::cout << "DEBUG: " << identifier << newline;
     }
 
     void util::logger::log(std::string text) {
@@ -376,7 +374,7 @@ namespace timing {
         std::cout << "Total elapsed time: " << diff.count() << " seconds" << newline;
     }
 
-    time_d createTOD(uint8_t hr, uint8_t min, uint8_t sec) {
+    time_d createTOD(uint16_t hr, uint16_t min, uint16_t sec) {
         return (hr * 3600) + (min * 60) + (sec);
     }
 
@@ -399,7 +397,35 @@ namespace timing {
         return diff.count() + 1;
     }
 
+    time_t d_untilNext(DayTime& tme) {
+        CHRONO::time_point<CHRONO::system_clock> now = CHRONO::system_clock::now();
+        time_t tt = CHRONO::system_clock::to_time_t(now);
+        tm t = *localtime(&tt);
+        if (t.tm_hour > tme.hr || (t.tm_hour == tme.hr && t.tm_min > tme.min) || (t.tm_hour == tme.hr && t.tm_min == tme.min && t.tm_sec > tme.sec)) {
+            tt += 86400;
+            t = *localtime(&tt);
+        }
+        t.tm_sec = tme.sec;
+        t.tm_min = tme.min;
+        t.tm_hour = tme.hr;
+        CHRONO::duration<time_t> diff = CHRONO::duration_cast<CHRONO::seconds>(CHRONO::system_clock::from_time_t(mktime(&t)) - now);
+        return diff.count() + 1;
+    }
+
     CHRONO::time_point<CHRONO::system_clock> d_nextTime(const DayTime tme) {
+        time_t tt = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
+        tm t = *localtime(&tt);
+        if (t.tm_hour > tme.hr || (t.tm_hour == tme.hr && t.tm_min > tme.min) || (t.tm_hour == tme.hr && t.tm_min == tme.min && t.tm_sec > tme.sec)) {
+            tt += 86400;
+            t = *localtime(&tt);
+        }
+        t.tm_sec = tme.sec;
+        t.tm_min = tme.min;
+        t.tm_hour = tme.hr;
+        return CHRONO::system_clock::from_time_t(mktime(&t));
+    }
+
+    CHRONO::time_point<CHRONO::system_clock> d_nextTime(DayTime& tme) {
         time_t tt = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
         tm t = *localtime(&tt);
         if (t.tm_hour > tme.hr || (t.tm_hour == tme.hr && t.tm_min > tme.min) || (t.tm_hour == tme.hr && t.tm_min == tme.min && t.tm_sec > tme.sec)) {
@@ -467,11 +493,12 @@ namespace files {
             WinSync databuffer;
 
             std::getline(reader, linebuffer);
+            char dlm = util::clearEnd(linebuffer);
             if (linebuffer != "name,source,destination,options") {
                 output << "Instruction file is not in the correct format.\n";
             }
             else {
-                while (std::getline(reader, linebuffer)) {
+                while (std::getline(reader, linebuffer, dlm)) {
                     std::istringstream linestream(linebuffer);
                     std::getline(linestream, databuffer.name, csvd);
                     std::getline(linestream, databuffer.source, csvd);
@@ -489,31 +516,47 @@ namespace files {
         }
 
         void parseTasks(const char* filepath, std::ostream& output) {
-            std::ifstream reader(filepath);
-            std::string linebuffer, numbers, numbuff;
-            TaskFile databuffer;
+            //std::ifstream reader(filepath);
+            //std::string linebuffer, numbuff;
+            //TaskFile databuffer;
+            //std::vector<std::thread> threads;
+            //volatile bool tempvar;
 
-            std::getline(reader, linebuffer);
-            if (linebuffer == "name,command,output,hr,min,sec") {
-                output << "Task file is not in the correct format.\n";
-                output << linebuffer << newline;
-            }
-            else {
-                while (std::getline(reader, linebuffer)) {
-                    std::istringstream linestream(linebuffer);
-                    std::getline(linestream, databuffer.name, csvd);
-                    std::getline(linestream, databuffer.command, csvd);
-                    std::getline(linestream, databuffer.output, csvd);
-                    std::getline(linestream, numbuff, csvd);
-                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr;}
-                    std::getline(linestream, numbuff, csvd);
-                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.min;}
-                    std::getline(linestream, numbuff, csvd);
-                    {std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec;}
+            //std::getline(reader, linebuffer);
+            //char dlm = util::clearEnd(linebuffer);
+            //if (linebuffer != "name,command,output,hr,min,sec") {
+            //    output << "Task file is not in the correct format.\n";
+            //}
+            //else {
+            //    while (std::getline(reader, linebuffer)) {
+            //        std::istringstream linestream(linebuffer);
+            //        std::getline(linestream, databuffer.name, csvd);
+            //        std::getline(linestream, databuffer.command, csvd);
+            //        std::getline(linestream, databuffer.output, csvd);
+            //        std::getline(linestream, numbuff, csvd);
+            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr;}
+            //        std::getline(linestream, numbuff, csvd);
+            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.min;}
+            //        std::getline(linestream, numbuff, dlm);
+            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec;}
 
-                    output << databuffer.name << space << databuffer.command << space << databuffer.output << space << databuffer.tme.hr << space << databuffer.tme.min << space << databuffer.tme.sec << newline;
-                }
-            }
+            //        //output << databuffer.name << space << databuffer.command << space << databuffer.output << space << databuffer.tme.hr << space << databuffer.tme.min << space << databuffer.tme.sec << newline;
+
+            //        auto function = []() {};
+            //        if (databuffer.command == "@internal") {
+            //            switch (timing::createTOD(databuffer.tme.hr, databuffer.tme.min, databuffer.tme.sec)) {
+            //            case 0:
+            //                function = util::aptUpdates;
+            //            }
+            //        }
+            //        else {
+
+            //        }
+
+            //        std::thread th(timing::routineThread<void, const char*, std::ostream&>, tempvar, std::move(databuffer.tme), files::csv::winSync, databuffer.command.c_str(), std::ifstream(databuffer.output));
+            //        threads.emplace_back(th);
+            //    }
+            //}
         }
     }
 }

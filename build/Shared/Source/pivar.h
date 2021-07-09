@@ -4,9 +4,11 @@
 #define CHRONO std::chrono
 #define CE_STRING constexpr char const*
 
-constexpr char newline = 10;	// ('/n')
+constexpr char newline = 10;	// ('\n')
 constexpr char space = 32;		// (' ')
 constexpr char csvd = 44;		// (',')
+constexpr char cr = 13;			// ('\r')
+constexpr char null = 0;		// ('\0')
 
 namespace locations {
 	namespace stats {
@@ -19,10 +21,10 @@ namespace locations {
 }
 
 namespace gpin {
-	constexpr int pi_fan = 18;
-	constexpr int pi_power = 3;
+	constexpr unsigned short pi_fan = 18;
+	constexpr unsigned short pi_power = 3;
 
-	constexpr int pc_power = 20;
-	constexpr int pc_reset = 16;
-	constexpr int pc_status = 12;
+	constexpr unsigned short pc_power = 20;
+	constexpr unsigned short pc_reset = 16;
+	constexpr unsigned short pc_status = 12;
 }

@@ -8,11 +8,11 @@
 //	cpustat::UtilizationData core4;
 //};
 
-volatile bool run = true;
+std::atomic_bool run = { true };
 //volatile bool ctrl = true;
 
 static void endCondition() {
-	std::cin.get();
+	std::cin.ignore();
 	run = false;
 }
 
@@ -22,48 +22,19 @@ static void endCondition() {
 //	return;
 //}
 
-void work() {
-	std::cout << info::dateStamp() << ": work done?" << newline;
+void work(std::ofstream const& output) {
+	std::ofstream& out = const_cast<std::ofstream&>(output);
+	out << info::dateStamp() << ": work done?" << newline;
+	out.close();
 }
 
 int main(int argc, char* argv[]) {
 	timing::StopWatch runtime;
+	std::ofstream out("/data/logs/work.txt", std::ios::app);
 	
-	/*std::thread timed(timing::routineThread<void>, std::ref(run), timing::DayTime(17, 55, 0), work);
+	std::thread timed(timing::routineThread<void, std::ofstream const&>, std::ref(run), timing::DayTime(22, 17, 00), work, std::ofstream("/data/logs/work.txt", std::ios::app));
 	endCondition();
-	timed.join();*/
-
-	//std::cout << "updates: " << util::aptUpdates(std::cout) << newline;
-	//std::cout << "upgrades: " << util::aptUpgrade(std::cout) << newline;
-
-	/*int num1;
-	int num2;
-	int num3;
-
-	std::string numbuff, numbers = "10,-157,83989\n";
-	std::istringstream line(numbers);
-
-	std::getline(line, numbuff, csvd);
-	{
-		std::istringstream num(numbuff);
-		num >> num1;
-	}
-	std::getline(line, numbuff, csvd);
-	{
-		std::istringstream num(numbuff);
-		num >> num2;
-	}
-	std::getline(line, numbuff, csvd);
-	{
-		std::istringstream num(numbuff);
-		num >> num3;
-	}
-
-	std::cout << num1 << newline;
-	std::cout << num2 << newline;
-	std::cout << num3 << newline;*/
-
-	files::csv::parseTasks("/data/pihost/tasks.csv", std::cout);
+	timed.join();
 
 	runtime.pTotal();
 	return 0;
