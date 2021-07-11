@@ -18,6 +18,8 @@
 #include <vector>
 #include <sstream>
 #include <atomic>
+#include <map>
+#include <typeinfo>
 
 namespace info {
 	float cputemp();
@@ -65,9 +67,9 @@ namespace info {
 }
 
 namespace util {
-	std::string exec(const char* command);
-	int aptUpdates();
-	int aptUpdates(std::ostream& out);
+	void exec(const char* command, std::ostream& output);
+	int aptUpdate();
+	int aptUpdate(std::ostream& out);
 	int aptUpgrade();
 	int aptUpgrade(std::ostream& out);
 	std::string rsync(const char* source, const char* destination, const char* options = "-va");
@@ -106,6 +108,7 @@ namespace timing {
 		void setStart();
 		double getDuration();
 		void pTotal();
+		void pTotal(std::ostream& output);
 	};
 
 	typedef unsigned int time_d;
@@ -123,34 +126,6 @@ namespace timing {
 	time_t d_untilNext(DayTime& tme);
 	CHRONO::time_point<CHRONO::system_clock> d_nextTime(const DayTime tme);
 	CHRONO::time_point<CHRONO::system_clock> d_nextTime(DayTime& tme);
-
-	template<typename returntype, typename... args>
-	void routineThread(std::atomic_bool const& control, const DayTime tme, returntype(*func)(args...), args... arg) {
-		time_t checkup = 10;
-		std::atomic_bool& con = const_cast<std::atomic_bool&>(control);
-		while (con) {
-			while (checkup < d_untilNext(tme)) {
-				if (!con) {
-					break;
-				}
-				std::this_thread::sleep_for(CHRONO::seconds(checkup));
-			}
-			if (con) {
-				std::this_thread::sleep_until(d_nextTime(tme));
-				func(arg...);
-				std::this_thread::sleep_for(CHRONO::seconds(1));
-			}
-		}
-	}
-
-	template<typename d_rep, typename d_period, typename returntype, typename... args>
-	void loopingThread(volatile bool const& control, CHRONO::duration<d_rep, d_period> interval, returntype(*func)(args...), args... arg) {
-		bool& con = const_cast<bool&>(control);
-		while (con) {
-			std::this_thread::sleep_for(interval);
-			func(arg...);
-		}
-	}
 }
 
 namespace files {
@@ -162,13 +137,6 @@ namespace files {
 			std::string options;
 		};
 
-		struct TaskFile {
-			std::string name;
-			std::string command;
-			std::string output;
-			timing::DayTime tme;
-		};
-
 		typedef std::vector<std::string> Line;
 		typedef std::vector<Line> Csv;
 		//util::csv::Csv = 'std::vector< std::vector<std::string> >'
@@ -178,9 +146,67 @@ namespace files {
 
 		bool winCheck(const char* filepath);
 		void winSync(const char* filepath, std::ostream& output);
-
-		void parseTasks(const char* filepath, std::ostream& output);
 	}
+
+	struct TaskFile {
+		std::string name;
+		std::string command;
+		std::string output;
+		std::string mode;
+		timing::DayTime tme;
+	};
+}
+
+namespace threading {
+	template<typename returntype, typename... args>
+	void routineThread(std::atomic_bool const& control, const timing::DayTime tme, const time_t uintv, returntype(*func)(args...), args... arg) {
+		std::atomic_bool& con = const_cast<std::atomic_bool&>(control);
+		while (con) {
+			while (uintv < d_untilNext(tme)) {
+				if (!con) {
+					break;
+				}
+				std::this_thread::sleep_for(CHRONO::seconds(uintv));
+			}
+			if (con) {
+				std::this_thread::sleep_until(d_nextTime(tme));
+				func(arg...);
+				std::this_thread::sleep_for(CHRONO::seconds(1));
+			}
+		}
+	}
+
+	template<typename d_rep, typename d_period, typename returntype, typename... args>
+	void loopingThread(std::atomic_bool const& control, CHRONO::duration<d_rep, d_period> interval, CHRONO::duration<d_rep, d_period> uinterval, returntype(*func)(args...), args... arg) {
+		std::atomic_bool& con = const_cast<std::atomic_bool&>(control);
+		int ratio = CHRONO::duration_cast<CHRONO::seconds>(interval) / CHRONO::duration_cast<CHRONO::seconds>(uinterval);
+		if (ratio > 1) {
+			CHRONO::duration<d_rep, d_period> rest = interval % uinterval;
+			while (con) {
+				for (int i = 0; i < ratio; i++) {
+					if (!con) {
+						break;
+					}
+					std::this_thread::sleep_for(uinterval);
+				}
+				if (con) {
+					std::this_thread::sleep_for(rest);
+					func(arg...);
+				}
+			}
+		}
+		else {
+			while (con) {
+				std::this_thread::sleep_for(interval);
+				func(arg...);
+			}
+		}
+	}
+
+	typedef void(*templatefunc)(const char*, std::ostream&);
+
+	void streamWrapper(const char* message, std::ostream const& output, templatefunc func);
+	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::map<std::string, templatefunc>& funcmap);
 }
 
 namespace gpio {

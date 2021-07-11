@@ -137,25 +137,22 @@ namespace info {
 }
 
 namespace util {
-    std::string exec(const char* command) {
+    void exec(const char* command, std::ostream& output) {
         char buffer[128];
-        std::string result = "";
         FILE* pipe = popen(command, "r");
         if (!pipe) {
-            result.append("popen function failed");
+            output << "popen function failed";
             pclose(pipe);
-            return result;
         }
         while (!feof(pipe)) {
             if (fgets(buffer, 128, pipe) != NULL) {
-                result.append(buffer);
+                output << buffer;
             }
         }
         pclose(pipe);
-        return result;
     }
 
-    int aptUpdates() {
+    int aptUpdate() {
         int result = 0;
         char buffer[128];
         std::string line = "";
@@ -178,7 +175,7 @@ namespace util {
         return result;
     }
 
-    int aptUpdates(std::ostream& out) {
+    int aptUpdate(std::ostream& out) {
         int result = 0;
         char buffer[128];
         std::string line = "";
@@ -374,6 +371,11 @@ namespace timing {
         std::cout << "Total elapsed time: " << diff.count() << " seconds" << newline;
     }
 
+    void StopWatch::pTotal(std::ostream& output) {
+        CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - start;
+        output << "Total elapsed time: " << diff.count() << " seconds" << newline;
+    }
+
     time_d createTOD(uint16_t hr, uint16_t min, uint16_t sec) {
         return (hr * 3600) + (min * 60) + (sec);
     }
@@ -514,49 +516,62 @@ namespace files {
             reader.close();
             return;
         }
+    }
+}
 
-        void parseTasks(const char* filepath, std::ostream& output) {
-            //std::ifstream reader(filepath);
-            //std::string linebuffer, numbuff;
-            //TaskFile databuffer;
-            //std::vector<std::thread> threads;
-            //volatile bool tempvar;
+namespace threading {
+    void streamWrapper(const char* message, std::ostream const& output, templatefunc func) {
+        std::ostream& out = const_cast<std::ostream&>(output);
+        if (typeid(output) == typeid(std::ofstream)) {
+            std::ofstream fout;
+            fout.basic_ios<char>::rdbuf(out.rdbuf());
+            func(message, fout);
+            fout.close();
+        }
+        else {
+            func(message, out);
+        }
+    }
 
-            //std::getline(reader, linebuffer);
-            //char dlm = util::clearEnd(linebuffer);
-            //if (linebuffer != "name,command,output,hr,min,sec") {
-            //    output << "Task file is not in the correct format.\n";
-            //}
-            //else {
-            //    while (std::getline(reader, linebuffer)) {
-            //        std::istringstream linestream(linebuffer);
-            //        std::getline(linestream, databuffer.name, csvd);
-            //        std::getline(linestream, databuffer.command, csvd);
-            //        std::getline(linestream, databuffer.output, csvd);
-            //        std::getline(linestream, numbuff, csvd);
-            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr;}
-            //        std::getline(linestream, numbuff, csvd);
-            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.min;}
-            //        std::getline(linestream, numbuff, dlm);
-            //        {std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec;}
+    void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::map<std::string, templatefunc>& funcmap) {
+        std::ifstream reader(filepath);
+        std::string linebuffer, numbuff;
+        files::TaskFile databuffer;
+        templatefunc funcbuff;
 
-            //        //output << databuffer.name << space << databuffer.command << space << databuffer.output << space << databuffer.tme.hr << space << databuffer.tme.min << space << databuffer.tme.sec << newline;
+        std::getline(reader, linebuffer);
+        char dlm = util::clearEnd(linebuffer);
+        if (linebuffer != "name,command,output,mode,hr,min,sec") {
+            output << "Task file is not in the correct format.\n";
+        }
+        else {
+            while (std::getline(reader, linebuffer)) {
+                std::istringstream linestream(linebuffer);
+                std::getline(linestream, databuffer.name, csvd);
+                std::getline(linestream, databuffer.command, csvd);
+                std::getline(linestream, databuffer.output, csvd);
+                std::getline(linestream, databuffer.mode, csvd);
+                std::getline(linestream, numbuff, csvd);
+                {std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr;}
+                std::getline(linestream, numbuff, csvd);
+                {std::istringstream numstream(numbuff); numstream >> databuffer.tme.min;}
+                std::getline(linestream, numbuff, dlm);
+                {std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec;}
 
-            //        auto function = []() {};
-            //        if (databuffer.command == "@internal") {
-            //            switch (timing::createTOD(databuffer.tme.hr, databuffer.tme.min, databuffer.tme.sec)) {
-            //            case 0:
-            //                function = util::aptUpdates;
-            //            }
-            //        }
-            //        else {
+                auto search = funcmap.find(databuffer.name);
+                funcbuff = search->second;
 
-            //        }
+                std::ios_base::openmode mode;
+                if (databuffer.mode == "a") {
+                    mode = std::ios::app;
+                }
+                else if (databuffer.mode == "o") {
+                    mode = std::ios::trunc;
+                }
 
-            //        std::thread th(timing::routineThread<void, const char*, std::ostream&>, tempvar, std::move(databuffer.tme), files::csv::winSync, databuffer.command.c_str(), std::ifstream(databuffer.output));
-            //        threads.emplace_back(th);
-            //    }
-            //}
+                std::thread th(threading::routineThread<void, const char*, std::ostream const&, threading::templatefunc>, std::ref(control), std::move(databuffer.tme), 10, threading::streamWrapper, databuffer.command.c_str(), std::ofstream(databuffer.output, mode), funcbuff);
+                threads.emplace_back(std::move(th));
+            }
         }
     }
 }

@@ -1,40 +1,59 @@
 #include "pilib.h"
 
-//typedef struct BCM2711_activity {
-//	cpustat::UtilizationData total;
-//	cpustat::UtilizationData core1;
-//	cpustat::UtilizationData core2;
-//	cpustat::UtilizationData core3;
-//	cpustat::UtilizationData core4;
-//};
-
 std::atomic_bool run = { true };
-//volatile bool ctrl = true;
 
 static void endCondition() {
 	std::cin.ignore();
 	run = false;
 }
 
-//void func(int a, int b) {
-//	std::cout << info::dateStamp() << newline << "a + b = " << a + b << newline;
-//	ctrl = false;
-//	return;
-//}
-
-void work(std::ofstream const& output) {
-	std::ofstream& out = const_cast<std::ofstream&>(output);
-	out << info::dateStamp() << ": work done?" << newline;
-	out.close();
+void work(std::ostream& output) {
+	output << info::dateStamp() << ": work done?" << newline;
 }
+
+//void t1(void) {
+//	std::cout << "test function 1" << newline;
+//}
+//
+//void t2(void) {
+//	std::cout << "test function 2" << newline;
+//}
+//
+//void t3(void) {
+//	std::cout << "test function 3" << newline;
+//}
+//
+//typedef void(*basicfunc)(void);
 
 int main(int argc, char* argv[]) {
 	timing::StopWatch runtime;
-	std::ofstream out("/data/logs/work.txt", std::ios::app);
 	
-	std::thread timed(timing::routineThread<void, std::ofstream const&>, std::ref(run), timing::DayTime(22, 17, 00), work, std::ofstream("/data/logs/work.txt", std::ios::app));
+	std::thread looping(threading::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, std::ostream const&, threading::templatefunc>, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(10), threading::streamWrapper, std::ofstream("/data/logs/work.txt", std::ios::app), work);
 	endCondition();
-	timed.join();
+	looping.join();
+
+	/*std::map<std::string, basicfunc> funcmap;
+
+	funcmap.insert(std::pair<std::string, basicfunc>("test1", t1));
+	funcmap.insert(std::pair<std::string, basicfunc>("test2", t2));
+	funcmap.insert(std::pair<std::string, basicfunc>("test3", t3));
+
+	std::string input;
+	while (true) {
+		break;
+		std::cout << "Enter a function to test: ";
+		std::cin >> input;
+		if (input == "exit") {
+			break;
+		}
+		auto result = funcmap.find(input);
+		if (result == funcmap.end()) {
+			std::cout << "Function not found" << newline;
+		}
+		else {
+			result->second();
+		}
+	}*/
 
 	runtime.pTotal();
 	return 0;

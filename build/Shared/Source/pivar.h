@@ -2,7 +2,7 @@
 #pragma once
 
 #define CHRONO std::chrono
-#define CE_STRING constexpr char const*
+#define CE_STR constexpr char const*
 
 constexpr char newline = 10;	// ('\n')
 constexpr char space = 32;		// (' ')
@@ -12,11 +12,19 @@ constexpr char null = 0;		// ('\0')
 
 namespace locations {
 	namespace stats {
-		CE_STRING cpu = "/proc/stat";
-		CE_STRING network = "/proc/net/dev";
-		CE_STRING load = "/proc/loadavg";
-		CE_STRING disk = "/proc/diskstats";
-		CE_STRING mem = "/proc/meminfo";
+		CE_STR cpu = "/proc/stat";
+		CE_STR network = "/proc/net/dev";
+		CE_STR load = "/proc/loadavg";
+		CE_STR disk = "/proc/diskstats";
+		CE_STR mem = "/proc/meminfo";
+	}
+
+	namespace external {
+
+		CE_STR winbackup = "/data/pihost/Live/external/rsyncbackup.csv";
+		CE_STR r_winbackup = "../external/rsyncbackup.csv";
+		CE_STR tasks = "/data/pihost/Live/external/tasks.csv";
+		CE_STR r_tasks = "../external/tasks.csv";
 	}
 }
 
