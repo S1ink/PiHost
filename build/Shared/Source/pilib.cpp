@@ -323,6 +323,11 @@ namespace util {
         log.close();
     }
 
+    void error(const char* message) {
+        perror(message);
+        exit(EXIT_FAILURE);
+    }
+
     void util::logger::log(std::string text) {
         scribe.open(path, modes);
         scribe << text;
@@ -573,6 +578,66 @@ namespace threading {
                 threads.emplace_back(std::move(th));
             }
         }
+    }
+}
+
+namespace networking {
+    Server::Server(int backlog, int domain, int service, int protocol, int port, ulong interface) : max_users(backlog) {
+        address.sin_family = domain;
+        address.sin_port = htons(port);
+        address.sin_addr.s_addr = htonl(interface);
+        addrlen = sizeof(address);
+        if ((sock = socket(domain, service, protocol)) == 0) {
+            util::error("Socket creation failure");
+        }
+    }
+
+    void Server::bindServer() {
+        if (bind(sock, (sockaddr*)&address, addrlen) < 0) {
+            util::error("Binding socket failure ");
+        }
+    }
+
+    void Server::startListen() {
+        if (listen(sock, max_users) < 0) {
+            util::error("Listening initialization failure ");
+        }
+    }
+
+    void Server::prep() {
+        bindServer();
+        startListen();
+    }
+
+    void Server::launch(std::atomic_bool& condition, std::ostream& output, Server::responsehandler handler) {
+        char buffer[10000];
+        std::string request;
+        std::ostringstream message;
+        while (condition) {
+            output << "Waiting for connection... ";
+            if ((nsock = accept(sock, (sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
+                util::error("Accept failed ");
+            }
+            output << "Connection recieved" << newline;
+            read(nsock, buffer, sizeof(buffer));
+            output << buffer;
+            request = buffer;
+            handler(request, message);
+            write(nsock, message.str().c_str(), strlen(message.str().c_str()));
+            output << "Sent message" << newline;
+            close(nsock);
+            output << "Closed socket" << newline;
+        }
+    }
+
+    void httpResponse(std::string& request, std::ostream& output) {
+        std::ifstream html("/data/pihost/build/Raspberry/Source/item.html");
+        std::string buffer;
+        std::ostringstream content;
+        while (std::getline(html, buffer)) {
+            content << buffer << newline;
+        }
+        output << http::httpv << http::codes::ok << newline << http::type << http::types::text::html << newline << http::len << strlen(content.str().c_str()) << newline << newline << content.str();
     }
 }
 

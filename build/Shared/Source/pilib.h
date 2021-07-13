@@ -20,6 +20,8 @@
 #include <atomic>
 #include <map>
 #include <typeinfo>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 namespace info {
 	float cputemp();
@@ -44,6 +46,7 @@ namespace info {
 		void readVector(std::vector<LineParse>& container);
 		void convertData(LineParse& snapshot1, LineParse& snapshot2, ActivityData& converted);
 		void convertVectorData(std::vector<LineParse>& snapshot1, std::vector<LineParse>& snapshot2, std::vector<ActivityData>& converted);
+		//change sleep metric to CHRONO >>
 		void takeSample(std::vector<LineParse>& vector1, std::vector<LineParse>& vector2, std::vector<ActivityData>& result, unsigned int sample_interval = 1);
 		float getPercent(unsigned int wait = 1);
 	}
@@ -83,6 +86,8 @@ namespace util {
 	void debug(input identifier) {
 		std::cout << "DEBUG: " << identifier << newline;
 	}
+
+	void error(const char* message);
 
 	class logger {
 	private:
@@ -207,6 +212,24 @@ namespace threading {
 
 	void streamWrapper(const char* message, std::ostream const& output, templatefunc func);
 	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::map<std::string, templatefunc>& funcmap);
+}
+
+namespace networking {
+	//https://medium.com/from-the-scratch/http-server-what-do-you-need-to-know-to-build-a-simple-http-server-from-scratch-d1ef8945e4fa
+	class Server {
+	private:
+		sockaddr_in address;
+		int sock, nsock, max_users, addrlen;
+	public:
+		Server(int backlog = 5, int domain = AF_INET, int service = SOCK_STREAM, int protocol = 0, int port = 80, ulong interface = INADDR_ANY);
+		void bindServer();
+		void startListen();
+		void prep();
+		typedef void(*responsehandler)(std::string&, std::ostream&);
+		void launch(std::atomic_bool& condition, std::ostream& output, Server::responsehandler handler);
+	};
+
+	void httpResponse(std::string& request, std::ostream& output);
 }
 
 namespace gpio {
