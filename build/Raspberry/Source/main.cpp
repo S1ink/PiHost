@@ -1,4 +1,22 @@
+#define STD_FULL
+#define PILIB_FULL
 #include "pilib.h"
+
+typedef void(*function)(std::ostream&);
+
+void streamWrap(pilib::lstream& fout, function func) {
+	fout.openOutput();
+	func(fout);
+	fout.close();
+
+	fout.openInput();
+	std::cout << fout.rdbuf() << newline;
+	fout.close();
+}
+
+void work(std::ostream& output) {
+	output << pilib::dateStamp() << ": work done?" << newline;
+}
 
 std::atomic_bool run = { true };
 
@@ -7,108 +25,16 @@ static void endCondition() {
 	run = false;
 }
 
-void work(std::ostream& output) {
-	output << info::dateStamp() << ": work done?" << newline;
-}
-
-struct netdevice {
-	std::string id;
-	int basic_data[2];
-	int full_data[16];
-};
-
-class netstat {
-	void parse(std::vector<netdevice>& devices) {
-		//std::vector<netdevice> devices;
-		std::ifstream file(locations::stats::network);
-		std::string buffer;
-		while (std::getline(file, buffer)) {
-			std::istringstream line(buffer);
-			line >> buffer;
-			if (buffer != "Inter-|" || buffer != "face") {
-				devices.emplace_back(netdevice());
-				netdevice& device = devices.back();
-				device.id = buffer;
-				for (int i = 0; i < 16; i++) {
-					line >> device.full_data[i];
-				}
-				device.basic_data[0] = device.full_data[0];
-				device.basic_data[1] = device.full_data[8];
-			}
-		}
-	}
-public:
-	struct transfer {
-		long long up;
-		long long down;
-	};
-
-	static void ethernet(transfer& data) {
-		//transfer data;
-		std::string buffer;
-		int lindex = 0;
-		timing::StopWatch timer;
-		std::ifstream input(locations::stats::network);
-		while (1) {
-			std::getline(input, buffer);
-			std::istringstream line(buffer);
-			line >> buffer;
-			if (buffer == "eth0:") {
-				long long raw[9];
-				for (int i = 0; i < 9; i++) {
-					line >> raw[i];
-				}
-				data.down = raw[0];
-				data.up = raw[8];
-				input.close();
-				std::this_thread::sleep_for(CHRONO::seconds(1));
-				double div = timer.getDuration();
-				input.open(locations::stats::network);
-				for (int i = 0; i <= lindex; i++) {
-					std::getline(input, buffer);
-				}
-				std::istringstream line(buffer);
-				line >> buffer;
-				for (int i = 0; i < 9; i++) {
-					line >> raw[i];
-				}
-				data.down = (raw[0] - data.down)/div;
-				data.up = (raw[8] - data.up)/div;
-				break;
-			}
-			else {
-				lindex += 1;
-			}
-		}
-		//return data;
-	}
-};
-
-std::string bytePrefixes(long long& bytes) {
-	std::ostringstream stream;
-	if (bytes > 1000000000) {
-		stream << bytes / 1000000000 << " GB";
-	}
-	else if (bytes > 1000000) {
-		stream << bytes / 1000000 << " MB";
-	}
-	else if (bytes > 1000) {
-		stream << bytes / 1000 << " KB";
-	}
-	else {
-		stream << bytes << " B";
-	}
-	return stream.str();
+void winBackup(std::ostream& output) {
+	output << "Pihost internal WinBackup initialized. (" << pilib::dateStamp() << ")" << newline << newline;
+	pilib::winSync(locations::external::winbackup, output);
+	output << "Process finished at: " << pilib::dateStamp() << newline;
 }
 
 int main(int argc, char* argv[]) {
-	timing::StopWatch runtime;
-	
-	/*std::thread looping(threading::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, std::ostream const&, threading::templatefunc>, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(10), threading::streamWrapper, std::ofstream("/data/logs/work.txt", std::ios::app), work);
-	endCondition();
-	looping.join();*/
+	pilib::StopWatch runtime;
 
-	std::thread end(endCondition);
+	//std::thread end(endCondition);
 
 	/*netstat::transfer nets;
 	while (run) {
@@ -116,13 +42,47 @@ int main(int argc, char* argv[]) {
 		std::cout << bytePrefixes(nets.down) << "/s down" << newline << bytePrefixes(nets.up) << "/s up" << newline << newline;
 	}*/
 
-	networking::Server webserver;
+	/*networking::Server webserver;
 	webserver.prep();
-	webserver.launch(std::ref(run), std::cout, networking::httpResponse);
+	webserver.launch(std::ref(run), std::cout, networking::sendBinary);*/
 
-	end.join();
+	/*while (true) {
+		std::string inp;
+		std::cout << "Enter a file path to open: ";
+		std::cin >> inp;
+		if (inp == "exit") {
+			break;
+		}
+		uint size = 0;
+		std::string buffer;
+		std::fstream file;
+		file.open(inp, std::ios::in | std::ios::binary);
+		if (!file) {
+			std::cout << "File is not readable or does not exist" << newline;
+		}
+		else {
+			file.seekg(0, std::ios::end);
+			size = file.tellg();
+			buffer.resize(size);
+			file.seekg(0, std::ios::beg);
+			file.read(&buffer[0], size);
+			file.close();
+			std::cout << buffer.size() << newline;
+			std::cout << buffer << newline;
+		}
+	}*/
+	/*file.open("/PiSHARE/Media/Audio/MCU/06 The First Bite Is the Deepest.m4a", std::ios::out | std::ios::binary);
+	file.write(&buffer[0], size);
+	file.close();*/
 
-	runtime.pTotal();
+	//pilib::lstream stream("/data/logs/work.txt", std::ios::trunc);
+	//std::thread th(pilib::loopingThread < CHRONO::seconds::rep, CHRONO::seconds::period, void, pilib::lstream&, function >, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(5), streamWrap, std::ref(stream), work);
+
+	winBackup(std::cout);
+
+	//end.join();
+	//th.join();
+
 	return 0;
 }
 

@@ -21,10 +21,10 @@ namespace locations {
 
 	namespace external {
 
-		CE_STR winbackup = "/data/pihost/Live/external/rsyncbackup.csv";
-		CE_STR r_winbackup = "../external/rsyncbackup.csv";
-		CE_STR tasks = "/data/pihost/Live/external/tasks.csv";
-		CE_STR r_tasks = "../external/tasks.csv";
+		CE_STR winbackup = "/data/pihost/resources/rsyncbackup.csv";
+		//CE_STR r_winbackup = "../external/rsyncbackup.csv";
+		CE_STR tasks = "/data/pihost/resources/tasks.csv";
+		//CE_STR r_tasks = "../external/tasks.csv";
 	}
 }
 

@@ -1,55 +1,54 @@
+#define PILIB_FULL
+#define STD_FULL
 #include "pilib.h"
 
-CE_STR version = "1.2.1";
+CE_STR version = "1.3.1";
 
 //all compatible thread modules must be in the from of ~ typedef void(*templatefunc)(const char*, std::ostream&)
 namespace thmods {
     void aptRun(const char* message, std::ostream& output) {
-        timing::StopWatch ptime;
-        output << "Pihost internal APT updater initialized. (" << info::dateStamp() << ")" << newline << newline;
-        int updates = util::aptUpdate(output);
+        pilib::StopWatch ptime;
+        output << "Pihost internal APT updater initialized. (" << pilib::dateStamp() << ")" << newline;
+        int updates = pilib::aptUpdate(output);
         output << newline << newline << " * * * * * * * * " << newline << newline;
-        int upgrades = util::aptUpgrade(output);
-        output << "Process finished at: " << info::dateStamp() << newline << "Total elapsed time: " << ptime.getDuration() << " seconds." << newline;
-        output << "Updates: " << updates << newline << "Upgrades: " << upgrades;
+        int upgrades = pilib::aptUpgrade(output);
+        output << "Updates: " << updates << newline << "Upgrades: " << upgrades << newline;
+        output << "Process finished at: " << pilib::dateStamp();
     }
 
     void winBackup(const char* message, std::ostream& output) {
-        timing::StopWatch ptime;
-        output << "Pihost internal WinBackup initialized. (" << info::dateStamp() << ")" << newline << newline;
-        files::csv::winSync(locations::external::winbackup, output);
-        output << "Process finished at: " << info::dateStamp() << newline << "Total elapsed time: " << ptime.getDuration() << " seconds.";
+        pilib::StopWatch ptime;
+        output << "Pihost internal WinBackup initialized. (" << pilib::dateStamp() << ")" << newline << newline;
+        pilib::winSync(locations::external::winbackup, output);
+        output << "Process finished at: " << pilib::dateStamp() << newline;
     }
 
     void commandRun(const char* message, std::ostream& output) {
-        timing::StopWatch ptime;
-        output << "Pihost internal command runner initialized. (" << info::dateStamp() << ")" << newline << newline;
-        util::exec(message, output);
-        output << newline << "Process finished at: " << info::dateStamp() << newline << "Total elapsed time: " << ptime.getDuration() << " seconds.";
+        pilib::StopWatch ptime;
+        output << "Pihost internal command runner initialized. (" << pilib::dateStamp() << ")" << newline << newline;
+        pilib::exec(message, output);
+        output << newline << "Process finished at: " << pilib::dateStamp() << newline;
     }
 }
 
-CE_STR main_out = "/data/logs/rpi_out.txt";
-
-constexpr std::ios_base::openmode modes = (std::ios::app);
 constexpr time_t update_intv = 10;
 
-std::map<std::string, threading::templatefunc> functions;
-std::vector<std::thread> threads;
-
 std::atomic_bool run = { true };
-std::ofstream logger;
+pilib::lstream logger("/data/logs/rpi_out.txt", std::ios::app);
 
 static void callback(int gpio, int level, uint32_t tick) {
     run = false;
-    logger.open(main_out, modes);
-    logger << info::dateStamp() << " : Button pressed - initiating shutdown" << newline;
+    logger.openOutput();
+    logger << pilib::dateStamp() << " : Button pressed - initiating shutdown" << newline;
     logger.close();
 }
 
 int main(int argc, char* argv[]) {
-    logger.open(main_out, modes);
-    logger << info::dateStamp() << " : System startup - PiHost version " << version << newline;
+    std::map<std::string, pilib::templatefunc> functions;
+    std::vector<std::thread> threads;
+
+    logger.openOutput();
+    logger << pilib::dateStamp() << " : System startup - PiHost version " << version << newline;
     logger.close();
 
     gpioInitialise();
@@ -57,21 +56,22 @@ int main(int argc, char* argv[]) {
     gpioSetMode(gpin::pi_power, PI_INPUT);
     gpioSetISRFunc(gpin::pi_power, RISING_EDGE, 0, callback);
 
-    functions.insert(std::pair<std::string, threading::templatefunc>("apt", thmods::aptRun));
-    functions.insert(std::pair<std::string, threading::templatefunc>("winbackup", thmods::winBackup));
-    functions.insert(std::pair<std::string, threading::templatefunc>("command", thmods::commandRun));
+    functions.insert(std::pair<std::string, pilib::templatefunc>("apt", thmods::aptRun));
+    functions.insert(std::pair<std::string, pilib::templatefunc>("winbackup", thmods::winBackup));
+    functions.insert(std::pair<std::string, pilib::templatefunc>("command", thmods::commandRun));
 
-    threading::parseTasks(locations::external::tasks, std::cout, run, update_intv, threads, functions);
-    logger.open(main_out, modes);
-    logger << info::dateStamp() << " : " << threads.size() << " subprocesses started." << newline;
+    pilib::parseTasks(locations::external::tasks, std::cout, run, update_intv, threads, functions);
+
+    logger.openOutput();
+    logger << pilib::dateStamp() << " : " << threads.size() << " subprocesses started." << newline;
     logger.close();
 
     double temp;
     while (run) {
-        temp = info::cputemp();
+        temp = pilib::sys::cpuTemp();
         if (temp >= 40) {
-            logger.open(main_out, modes);
-            logger << info::dateStamp() << " : High package temp of " << temp << " {CPU:" << info::cpu::getPercent() << "%}" << newline;
+            logger.openOutput();
+            logger << pilib::dateStamp() << " : High package temp of " << temp << " {CPU:" << pilib::sys::cpuPercent(CHRONO::seconds(1)) << "%}" << newline;
             logger.close();
         }
         std::this_thread::sleep_for(CHRONO::seconds(update_intv));
@@ -83,8 +83,8 @@ int main(int argc, char* argv[]) {
     }
     gpioTerminate();
 
-    logger.open(main_out, modes);
-    logger << info::dateStamp() << " : " << i << " thread(s) closed - shutting down now" << newline << newline;
+    logger.openOutput();
+    logger << pilib::dateStamp() << " : " << i << " thread(s) closed - shutting down now" << newline << newline;
     logger.close();
     
     system("sudo halt");

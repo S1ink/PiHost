@@ -1,3 +1,0 @@
-name,command,output,mode,hr,min,sec
-apt,@internal,/data/logs/apt_log.txt,o,0,0,0
-winbackup,@internal,/data/logs/winsync.txt,o,16,0,0

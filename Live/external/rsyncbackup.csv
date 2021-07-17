@@ -1,7 +1,0 @@
-name,source,destination,options
-minecraft_java,/windata/Hoodi/AppData/Roaming/.minecraft/,/PiSHARE/Backups/Minecraft/java,
-minecraft_bedrock,/windata/Hoodi/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/LocalState/games/com.mojang/,/PiSHARE/Backups/Minecraft/bedrock,
-subnautica(s),'/windata/Hoodi/AppData/LocalLow/Unknown Worlds/',/PiSHARE/Backups/Subnautica,
-bravebrowser-p1,'/windata/Hoodi/AppData/Local/BraveSoftware/Brave-Browser/User Data/','/PiSHARE/Backups/BraveBrowser/User Data',-va --exclude='*/'
-bravebrowser-p2,'/windata/Hoodi/AppData/Local/BraveSoftware/Brave-Browser/User Data/','/PiSHARE/Backups/BraveBrowser/User Data',-va --include='AutofillRegex/***' --include='AutofillStates/***' --include='BrowserMetrics/***' --exclude='*'
-bravebrowser-p3,'/windata/Hoodi/AppData/Local/BraveSoftware/Brave-Browser/User Data/Default/','/PiSHARE/Backups/BraveBrowser/User Data/Default',-va --exclude='*/'

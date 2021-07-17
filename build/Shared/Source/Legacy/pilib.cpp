@@ -587,6 +587,7 @@ namespace threading {
 
 namespace networking {
     Server::Server(int connections, int domain, int service, int protocol, int port, ulong interface) {
+        root = http::resources::root;
         max_users = connections;
         address.sin_family = domain;
         address.sin_port = htons(port);
@@ -638,6 +639,14 @@ namespace networking {
         }
     }
 
+    std::string Server::fullPath(const char* file) {
+        return std::string(root + file);
+    }
+
+    void Server::basicHeader(std::ostream& output, const char* type, std::ostringstream& resource) {
+        output << http::http1 << http::codes::ok << newline << http::type << type << newline << http::len << resource.str().length() << newline << newline << resource.str();
+    }
+
     void Server::internalHandler(std::string& request, std::ostream& output) {
         std::istringstream input(request);
         std::ostringstream resource;
@@ -645,13 +654,15 @@ namespace networking {
         std::string buffer;
         std::getline(input, buffer, space);
         if (buffer == "GET") {
-
+            std::getline(input, buffer, space);
+            //determine file or folder, type, available or not, then send to correct place
         }
         else if (buffer == "HEAD") {
-
+            output << http::http1 << http::codes::ok << newline << http::type << http::types::text::plain << newline << http::len << 0;
         }
         else {
-            //errorPage()
+            errorPage(fullPath("/error.html").c_str(), http::codes::not_impl, resource);
+            basicHeader(output, http::types::text::html, resource);
         }
     }
 
