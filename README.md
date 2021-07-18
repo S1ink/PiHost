@@ -1,5 +1,7 @@
 # PiHost 
-### PiHost is a project aimed at managing fan control, logging of SoC temps, directing backups/syncing, and other basic tasks (for Rasperry Pi).
- - Originally scripted in Python, now being developed in C++ for better performance and flexibility.
- - Python scripts are located under "scripts", C++ sources are located under "Build" and their respective project names. 
- - Binary modules are located under "Live" and are built for ARM64 - Do not execute on any other platform, they have also only been tested on a Pi4. 
+## What is PiHost?
+ _**PiHost is a (personal) project aimed at managing gpio, displaying and logging information, directing backups/syncing of files, and other basic tasks - an autonomous HOST for raspberry PI.**_
+## Quick Info
+ - PiHost was originally scripted in Python, but is now only being actively developed in C++. (Python code is located within the "scripts" folder)
+ - All C++ source files are located under the "build" folder. Some files may appear twice and organization may be not great because they are copied by Visual Studio. (Hopefully I will fix this in the future)
+ - The "Live" folder contains prebuilt binaries - see disclaimers below. 
