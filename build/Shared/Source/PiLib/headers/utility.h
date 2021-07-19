@@ -2,6 +2,8 @@
 
 #include "include.h"
 
+#include "info.h"
+
 namespace pilib {
 	class lstream : public std::basic_fstream<char> {
 #define OMODE std::_Ios_Openmode
@@ -25,8 +27,8 @@ namespace pilib {
 		void openInput();
 		void openOutput();
 
-		/*lstream(lstream const& other);
-		lstream(lstream&& other);*/
+		lstream(const lstream& other);
+		//lstream(lstream&& other);
 		//~lstream();
 #undef OMODE
 	};

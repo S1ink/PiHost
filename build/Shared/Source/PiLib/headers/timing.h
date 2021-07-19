@@ -9,8 +9,9 @@ namespace pilib {
 
 	class StopWatch {
 		CHRONO::time_point<CHRONO::high_resolution_clock> ref;
+		bool exit;
 	public:
-		StopWatch(bool now = true);
+		StopWatch(bool onexit = true, bool now = true);
 		void setStart();
 		double getDuration();
 		void pTotal(std::ostream& output = std::cout);

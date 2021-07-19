@@ -14,7 +14,7 @@ namespace pilib {
         }
     }
 
-    void streamWrapper(const char* message, pilib::lstream& output, templatefunc func) {
+    void streamWrapper(const char* message, lstream output, templatefunc func) {
         output.openOutput();
         func(message, output);
         output.close();
@@ -60,16 +60,19 @@ namespace pilib {
                 else if (databuffer.mode == "o") {
                     mode = std::ios::trunc;
                 }
-                pilib::lstream stream(databuffer.output.c_str(), mode);
+                else {
+                    mode = std::ios_base::openmode::_S_ios_openmode_end;
+                }
+                lstream stream(databuffer.output.c_str(), mode);
                 std::thread th(
-                    routineThread<void, const char*, pilib::lstream&, 
+                    routineThread<void, const char*, lstream, 
                     templatefunc>, 
                     std::ref(control), 
                     std::move(databuffer.tme), 
-                    10, 
-                    static_cast<void(*)(const char*, lstream&, templatefunc)>(streamWrapper), 
+                    th_uintv, 
+                    static_cast<void(*)(const char*, lstream, templatefunc)>(streamWrapper), 
                     databuffer.command.c_str(), 
-                    std::ref(stream), 
+                    stream, 
                     funcbuff
                 );
                 threads.emplace_back(std::move(th));

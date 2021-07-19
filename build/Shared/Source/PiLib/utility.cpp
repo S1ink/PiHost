@@ -36,14 +36,17 @@ namespace pilib {
         open(file, ((modes | std::ios::out) & ~std::ios::in));
     }
 
-    /*lstream(lstream const& other) {
+    lstream::lstream(const lstream& other) {
         std::cout << pilib::dateStamp() << " : Stream object copied. {" << this->is_open() << "}" << newline;
+        file = other.file;
+        modes = other.modes;
+
     }
-    lstream(lstream&& other) {
+    /*lstream::lstream(lstream&& other) {
         std::cout << pilib::dateStamp() << " : Stream object moved. {" << this->is_open() << "}" << newline;
         other.setData(file.c_str(), modes);
     }*/
-    //~lstream() {std::cout << pilib::dateStamp() << " : Stream object deleted. {" << this->is_open() << "}" << newline;}
+    //lstream::~lstream() {std::cout << pilib::dateStamp() << " : Stream object deleted. {" << this->is_open() << "}" << newline;}
 
     void exec(const char* command, std::ostream& output) {
         FILE* pipe = popen(command, "r");

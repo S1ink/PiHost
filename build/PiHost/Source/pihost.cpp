@@ -2,25 +2,27 @@
 #define STD_FULL
 #include "pilib.h"
 
-CE_STR version = "1.3.1";
+CE_STR version = "1.3.2";
 
 //all compatible thread modules must be in the from of ~ typedef void(*templatefunc)(const char*, std::ostream&)
 namespace thmods {
     void aptRun(const char* message, std::ostream& output) {
-        pilib::StopWatch ptime;
+        pilib::StopWatch ptime(false);
         output << "Pihost internal APT updater initialized. (" << pilib::dateStamp() << ")" << newline;
         int updates = pilib::aptUpdate(output);
         output << newline << newline << " * * * * * * * * " << newline << newline;
         int upgrades = pilib::aptUpgrade(output);
         output << "Updates: " << updates << newline << "Upgrades: " << upgrades << newline;
-        output << "Process finished at: " << pilib::dateStamp();
+        output << "Process finished at: " << pilib::dateStamp() << newline;
+        ptime.pTotal(output);
     }
 
     void winBackup(const char* message, std::ostream& output) {
-        pilib::StopWatch ptime;
+        pilib::StopWatch ptime(false);
         output << "Pihost internal WinBackup initialized. (" << pilib::dateStamp() << ")" << newline << newline;
         pilib::winSync(locations::external::winbackup, output);
         output << "Process finished at: " << pilib::dateStamp() << newline;
+        ptime.pTotal(output);
     }
 
     void commandRun(const char* message, std::ostream& output) {
@@ -28,6 +30,7 @@ namespace thmods {
         output << "Pihost internal command runner initialized. (" << pilib::dateStamp() << ")" << newline << newline;
         pilib::exec(message, output);
         output << newline << "Process finished at: " << pilib::dateStamp() << newline;
+        ptime.pTotal(output);
     }
 }
 

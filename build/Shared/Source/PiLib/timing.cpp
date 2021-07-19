@@ -15,10 +15,11 @@ namespace pilib {
         return diff.count();
     }
 
-    StopWatch::StopWatch(bool now) {
+    StopWatch::StopWatch(bool onexit, bool now) {
         if (now) {
             ref = CHRONO::high_resolution_clock::now();
         }
+        this->exit = onexit;
     }
 
     void StopWatch::setStart() {
@@ -36,8 +37,10 @@ namespace pilib {
     }
 
     StopWatch::~StopWatch(){
-        CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;
-        std::cout << "Total elapsed time: " << diff.count() << " seconds" << newline;
+        if (exit) {
+            CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;
+            std::cout << "Total elapsed time: " << diff.count() << " seconds" << newline;
+        }
     }
 
     time_d createTOD(uint16_t hr, uint16_t min, uint16_t sec) {
