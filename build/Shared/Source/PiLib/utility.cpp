@@ -218,11 +218,16 @@ namespace pilib {
         return ret;
     }
 
+    bool exists(const char* path) {
+        struct stat buffer;
+        return (stat(path, &buffer) == 0);
+    }
+
     void replace(std::string& str, const std::string find, const char* replace) {
         str.replace(str.find(find), find.length(), replace);
     }
 
-    void error(const char* message) {
+    void exitError(const char* message) {
         perror(message);
         exit(EXIT_FAILURE);
     }

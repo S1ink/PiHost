@@ -61,6 +61,6 @@ namespace pilib {
 	};
 
 	void streamWrapper(const char* message, std::ostream const& output, templatefunc func);
-	void streamWrapper(const char* message, pilib::lstream& output, templatefunc func);
+	void streamWrapper(const char* message, pilib::lstream output, templatefunc func);
 	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::map<std::string, templatefunc>& funcmap);
 }

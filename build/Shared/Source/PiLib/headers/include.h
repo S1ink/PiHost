@@ -22,5 +22,9 @@
 #include <typeinfo>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 #include <algorithm>
 #include <regex>
+#include <sys/stat.h>

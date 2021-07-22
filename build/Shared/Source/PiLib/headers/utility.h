@@ -45,11 +45,12 @@ namespace pilib {
 
 	char clearEnd(std::string& str);
 	void replace(std::string& str, const std::string find, const char* replace);
+	bool exists(const char* path);
 
 	template<typename input>
 	void debug(input identifier) {
 		std::cout << "DEBUG: " << identifier << newline;
 	}
 
-	void error(const char* message);
+	void exitError(const char* message);
 }

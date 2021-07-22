@@ -18,100 +18,19 @@
 //	output << pilib::dateStamp() << ": work done?" << newline;
 //}
 
-void aptRun(const char* message, std::ostream& output) {
-	pilib::StopWatch ptime(false);
-	output << "Pihost internal APT updater initialized. (" << pilib::dateStamp() << ")" << newline;
-	int updates = pilib::aptUpdate(output);
-	output << newline << newline << " * * * * * * * * " << newline << newline;
-	int upgrades = pilib::aptUpgrade(output);
-	output << "Updates: " << updates << newline << "Upgrades: " << upgrades << newline;
-	output << "Process finished at: " << pilib::dateStamp() << newline;
-	ptime.pTotal(output);
-}
-
-void streamWrap(const char* message, pilib::lstream output, pilib::templatefunc func) {
-	std::cout << output.getFile() << newline;
-	output.openOutput();
-	func(message, output);
-	output.close();
-}
-
-void pTasks(
-	const char* filepath,
-	std::ostream& output,
-	std::atomic_bool& control,
-	time_t th_uintv,
-	std::vector<std::thread>& threads,
-	std::map<std::string,
-	pilib::templatefunc>& funcmap
-) {
-	std::ifstream reader(filepath);
-	std::string linebuffer, numbuff;
-	pilib::TaskFile databuffer;
-	pilib::templatefunc funcbuff;
-	std::getline(reader, linebuffer);
-	char dlm = pilib::clearEnd(linebuffer);
-	if (linebuffer != "name,command,output,mode,hr,min,sec") {
-		output << "Task file is not in the correct format.\n";
-	}
-	else {
-		while (std::getline(reader, linebuffer)) {
-			std::istringstream linestream(linebuffer);
-			std::getline(linestream, databuffer.name, csvd);
-			std::getline(linestream, databuffer.command, csvd);
-			std::getline(linestream, databuffer.output, csvd);
-			std::getline(linestream, databuffer.mode, csvd);
-			std::getline(linestream, numbuff, csvd);
-			{std::istringstream numstream(numbuff); numstream >> databuffer.tme.hr; }
-			std::getline(linestream, numbuff, csvd);
-			{std::istringstream numstream(numbuff); numstream >> databuffer.tme.min; }
-			std::getline(linestream, numbuff, dlm);
-			{std::istringstream numstream(numbuff); numstream >> databuffer.tme.sec; }
-			auto search = funcmap.find(databuffer.name);
-			funcbuff = search->second;
-			std::ios_base::openmode mode;
-			if (databuffer.mode == "a") {
-				mode = std::ios::app;
-			}
-			else if (databuffer.mode == "o") {
-				mode = std::ios::trunc;
-			}
-			else {
-				mode = std::ios_base::openmode::_S_ios_openmode_end;
-			}
-			pilib::lstream stream(databuffer.output.c_str(), mode);
-			std::thread th(
-				pilib::routineThread<void, const char*, pilib::lstream,
-				pilib::templatefunc>,
-				std::ref(control),
-				std::move(databuffer.tme),
-				th_uintv,
-				static_cast<void(*)(const char*, pilib::lstream, pilib::templatefunc)>(streamWrap),
-				databuffer.command.c_str(),
-				stream,
-				funcbuff
-			);
-			threads.emplace_back(std::move(th));
-		}
-	}
-}
-
 std::atomic_bool run = { true };
+//std::atomic_bool run2 = { true };
 
 static void endCondition() {
 	std::cin.ignore();
 	run = false;
+	/*std::cin.ignore();
+	run2 = false;*/
 }
 
 int main(int argc, char* argv[]) {
 	pilib::StopWatch runtime;
 	std::thread end(endCondition);
-
-	std::map<std::string, pilib::templatefunc> functions;
-	std::vector<std::thread> threads;
-	functions.insert(std::pair<std::string, pilib::templatefunc>("apt", aptRun));
-
-	pTasks("/data/pihost/tasks.csv", std::cout, run, 10, threads, functions);
 
 	/*netstat::transfer nets;
 	while (run) {
@@ -130,11 +49,15 @@ int main(int argc, char* argv[]) {
 	//pilib::lstream stream("/data/logs/work.txt", std::ios::trunc);
 	//std::thread th(pilib::loopingThread < CHRONO::seconds::rep, CHRONO::seconds::period, void, pilib::lstream&, function >, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(5), streamWrap, std::ref(stream), work);
 
+	pilib::HttpServer server(pilib::http::resources::root);
+	server.serve(run);
+
+	/*std::vector <pilib::http::Segment> segs{pilib::http::Segment(std::string("Connection"), std::string("keep-alive"))};
+	pilib::http::Request req(pilib::http::Method::GET, std::string("/"), segs, pilib::http::Version(1));
+
+	std::cout << req.getSerialized() << newline;*/
+
 	end.join();
-	unsigned int i;
-	for (i = 0; i < threads.size(); i++) {
-		threads[i].join();
-	}
 	//th.join();
 	return 0;
 }
