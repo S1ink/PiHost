@@ -61,34 +61,50 @@ namespace pilib {
 	};
 
 	namespace http {
-		enum class Method {
-			GET, HEAD, POST,
-			PUT, DELETE, TRACE,
-			OPTIONS, CONNECT, PATCH
-		};
+		//enums moved to {pivar.h}
 
-		class Methods {
+		/*template<typename type>	//implement for less lines?
+		class HDB {
 		private:
-			static const std::map<std::string, Method> typemap;
-			static const std::map<Method, std::string> stringmap;
+			static const std::unordered_map<std::string, type> typemap;
+			static const std::unordered_map<type, std::string> stringmap;
+		public:
+			static type getType(const std::string& str) {
+				auto search = typemap.find(str);
+				return search->second;
+			}
+			static std::string getString(type type) {
+				auto search = stringmap.find(type);
+				return search->second;
+			}
+		};*/
+
+		//implement checks on conversion functions
+		struct Versions {
+		private:
+			static const std::unordered_map<std::string, Version> typemap;
+			static const std::unordered_map<Version, std::string> stringmap;
+		public:
+			static Version getType(const std::string& str);
+			static std::string getString(Version version);
+		};
+		struct Methods {
+		private:
+			static const std::unordered_map<std::string, Method> typemap;
+			static const std::unordered_map<Method, std::string> stringmap;
 		public:
 			static Method getType(const std::string& str);
 			static std::string getString(Method method);
 		};
-
-		enum class Version {
-			HTTP_1_0,
-			HTTP_1_1,
-			HTTP_2_0
-		};
-
-		class Versions {
+		struct Codes {
 		private:
-			static const std::map<std::string, Version> typemap;
-			static const std::map<Version, std::string> stringmap;
+			static const std::unordered_map<std::string, Code> typemap;
+			static const std::unordered_map<Code, std::string> stringmap;
 		public:
-			static Version getType(const std::string& str);
-			static std::string getString(Version version);
+			static Code getType(const std::string& str);
+			static Code getType(int code);
+			static std::string getString(Code code);
+			static std::string getString(int code);
 		};
 		
 
@@ -137,34 +153,71 @@ namespace pilib {
 
 			static std::string getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);	//add overload with {move}
 			static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment> headers, Version version = Version::HTTP_1_1);
-			//static {constructor} methods here?
+			//static (deserialize) {=constructor} methods here?
 		};
 
 		class Response {
 		private:
-
+			Code responsecode;
+			Version version;
+			std::map<std::string, std::string> headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
+			std::string body;
 		public:
+			Response(Version version = Version::HTTP_1_1) : version(version) {}
+			Response(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);	//add overload with {move}
+			Response(const std::string& response);
 
+			std::string getSerialized();
+
+			void lateConstruct(Code responsecode, std::vector<Segment>& headers, const std::string& body);
+
+			Code* intCode();
+			Version* intVersion();
+			std::string* intBody();
+			std::map<std::string, std::string>* intHeaders();
+
+			std::vector<Segment> getHeaders();
+
+			uint bodyLen();
+
+			static std::string getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);
+			static void getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);
+			//static (deserialize) {=constructor} methods here?
+		};
+
+		class HttpHandler {
+		private:
+			struct State {
+				int sent;
+				std::string bbuff;
+
+			};
+
+			std::string root;
+			Version version;
+			State state;
+
+			std::string rPath(const char* item);
+		public:
+			HttpHandler(const char* root, Version version = Version::HTTP_1_1) : root(root), version(version) {}
+
+			//server
+			void respond(int socket, const std::string& input);
+			//client
+			//void request(const std::string& input, std::ostream& output, bool init = false); 
+		};
+
+		class HttpServer : public BaseServer {
+		private:
+			HttpHandler handler;
+			Version version;
+			void prepServer();
+		public:
+			HttpServer(const char* root = resources::root, int max_accepts = 5, Version version = Version::HTTP_1_1);
+
+			void serve(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void serve1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void serve1_1(const std::atomic_bool& rc, std::ostream& out = std::cout);
 		};
 	}
-
-	class HttpHandler {
-	private:
-		std::string root;
-	public:
-		HttpHandler(const char* root) : root(root) {}
-
-		std::string fullPath(const char* item);
-	};
-
-	class HttpServer : public BaseServer {
-	private:
-		HttpHandler handler;
-		void prepServer();
-	public:
-		HttpServer(const char* root = http::resources::root, int max_accepts = 5);
-
-		void server1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);
-		void serve(const std::atomic_bool& rc, std::ostream& out = std::cout);
-	};
 }

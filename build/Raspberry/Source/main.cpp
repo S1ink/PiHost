@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
 	//pilib::lstream stream("/data/logs/work.txt", std::ios::trunc);
 	//std::thread th(pilib::loopingThread < CHRONO::seconds::rep, CHRONO::seconds::period, void, pilib::lstream&, function >, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(5), streamWrap, std::ref(stream), work);
 
-	pilib::HttpServer server(pilib::http::resources::root);
+	pilib::http::HttpServer server(pilib::http::resources::root);
 	server.serve(run);
 
 	/*std::vector <pilib::http::Segment> segs{pilib::http::Segment(std::string("Connection"), std::string("keep-alive"))};
