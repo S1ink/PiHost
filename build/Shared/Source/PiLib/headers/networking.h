@@ -4,6 +4,7 @@
 
 #include "utility.h"
 #include "info.h"
+#include "../External/mimetype.h"
 
 /* SERVER PROCESS
 * - set up "addrinfo"'s base on type of server -> getaddrinfo()
@@ -136,20 +137,21 @@ namespace pilib {
 			Version version;
 			Method method;
 			std::string resource;
-			std::map<std::string, std::string> headers;
+			std::vector<Segment> headers;
 		public:
 			//create helper method for making bulk {Segments} ~somewhere
-			Request(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);
+			Request(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1)
+				: version(version), method(method), resource(resource), headers(headers) {}
 			Request(const std::string& reqest);
 
 			std::string getSerialized();
 
+			std::map<std::string, std::string> headerMap(std::vector<Segment>& headers);
+
 			Version* intVersion();
 			Method* intMethod();
 			std::string* intResource();
-			std::map<std::string, std::string>* intHeaders();
-
-			std::vector<Segment> getHeaders();
+			std::vector<Segment>* intHeaders();
 
 			static std::string getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);	//add overload with {move}
 			static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment> headers, Version version = Version::HTTP_1_1);
@@ -160,23 +162,24 @@ namespace pilib {
 		private:
 			Code responsecode;
 			Version version;
-			std::map<std::string, std::string> headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
+			std::vector<Segment> headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
 			std::string body;
 		public:
 			Response(Version version = Version::HTTP_1_1) : version(version) {}
-			Response(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);	//add overload with {move}
+			Response(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1)
+				: responsecode(responsecode), version(version), headers(headers), body(body) {}	//add overload with {move}
 			Response(const std::string& response);
 
+			void lateConstruct(Code responsecode, std::vector<Segment>& headers, const std::string& body);
+			void noBody(Code responsecode, std::vector<Segment>& headers);
 			std::string getSerialized();
 
-			void lateConstruct(Code responsecode, std::vector<Segment>& headers, const std::string& body);
+			std::map<std::string, std::string> headerMap(std::vector<Segment>& headers);
 
 			Code* intCode();
 			Version* intVersion();
 			std::string* intBody();
-			std::map<std::string, std::string>* intHeaders();
-
-			std::vector<Segment> getHeaders();
+			std::vector<Segment>* intHeaders();
 
 			uint bodyLen();
 

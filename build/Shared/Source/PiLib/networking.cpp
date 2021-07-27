@@ -229,29 +229,29 @@ namespace pilib {
             return search->second;
         }
         const std::unordered_map<std::string, Code> Codes::typemap = {
-            {"100 Continue", Code::CONTINUE}, {"200 OK", Code::OK}, 
-            {"201 Created", Code::CREATED}, {"202 Accepted", Code::ACCEPTED}, 
-            {"204 No Content", Code::NO_CONTENT}, {"205 Reset Content", Code::RESET_CONTENT}, 
-            {"206 Partial Content", Code::PARTIAL_CONTENT}, 
-            {"300 Multiple Choices", Code::MULTIPLE_CHOICES}, 
-            {"301 Moved Permanently", Code::MOVED_PERMANENTLY}, 
-            {"302 Found", Code::FOUND}, {"400 Bad Request", Code::BAD_REQUEST}, 
-            {"401 Unauthorized", Code::UNAUTHORIZED}, 
-            {"402 Payment Required", Code::PAYMENT_REQUIRED}, 
-            {"403 Forbidden", Code::FORBIDDEN},  {"404 Not Found", Code::NOT_FOUND}, 
-            {"405 Method Not Allowed", Code::METHOD_NOT_ALLOWED}, 
-            {"406 Not Acceptable", Code::NOT_ACCEPTABLE}, 
-            {"408 Request Timeout", Code::REQUEST_TIMEOUT}, {"409 Conflict", Code::CONFLICT}, 
-            {"410 Gone", Code::GONE}, {"411 Length Required", Code::LENGTH_REQUIRED}, 
-            {"414 URI Too Long", Code::URI_TOO_LONG}, 
+            {"100 Continue", Code::CONTINUE}, {"200 OK", Code::OK},
+            {"201 Created", Code::CREATED}, {"202 Accepted", Code::ACCEPTED},
+            {"204 No Content", Code::NO_CONTENT}, {"205 Reset Content", Code::RESET_CONTENT},
+            {"206 Partial Content", Code::PARTIAL_CONTENT},
+            {"300 Multiple Choices", Code::MULTIPLE_CHOICES},
+            {"301 Moved Permanently", Code::MOVED_PERMANENTLY},
+            {"302 Found", Code::FOUND}, {"400 Bad Request", Code::BAD_REQUEST},
+            {"401 Unauthorized", Code::UNAUTHORIZED},
+            {"402 Payment Required", Code::PAYMENT_REQUIRED},
+            {"403 Forbidden", Code::FORBIDDEN},  {"404 Not Found", Code::NOT_FOUND},
+            {"405 Method Not Allowed", Code::METHOD_NOT_ALLOWED},
+            {"406 Not Acceptable", Code::NOT_ACCEPTABLE},
+            {"408 Request Timeout", Code::REQUEST_TIMEOUT}, {"409 Conflict", Code::CONFLICT},
+            {"410 Gone", Code::GONE}, {"411 Length Required", Code::LENGTH_REQUIRED},
+            {"414 URI Too Long", Code::URI_TOO_LONG},
             {"415 Unsupported Media Type", Code::UNSUPPORTED_MEDIA_TYPE},
-            {"418 I'm a teapot", Code::IM_A_TEAPOT}, 
+            {"418 I'm a teapot", Code::IM_A_TEAPOT},
             {"500 Internal Server Error", Code::INTERNAL_SERVER_ERROR},
-            {"501 Not Implemented", Code::NOT_IMPLEMENTED}, {"502 Bad Gateway", Code::BAD_GATEWAY}, 
-            {"503 Service Unavailable", Code::SERVICE_UNAVAILABLE}, 
+            {"501 Not Implemented", Code::NOT_IMPLEMENTED}, {"502 Bad Gateway", Code::BAD_GATEWAY},
+            {"503 Service Unavailable", Code::SERVICE_UNAVAILABLE},
             {"504 Gateway Timeout", Code::GATEWAY_TIMEOUT},
-            {"505 HTTP Version Not Supported", Code::HTTP_VERSION_NOT_SUPPORTED}, 
-            {"510 Not Extended", Code::NOT_EXTENDED}, 
+            {"505 HTTP Version Not Supported", Code::HTTP_VERSION_NOT_SUPPORTED},
+            {"510 Not Extended", Code::NOT_EXTENDED},
             {"511 Network Authentication Required", Code::NETWORK_AUTHICATION_REQIRED},
         };
         const std::unordered_map<Code, std::string> Codes::stringmap = {
@@ -333,12 +333,12 @@ namespace pilib {
 
         std::string Segment::getSerialized() {
             std::ostringstream segment;
-            segment << this->key << ": " << this->value << endline;
+            segment << this->key << ": " << this->value;
             return segment.str();
         }
         std::string Segment::getSerialized(const std::string& key, const std::string& value) {
             std::ostringstream segment;
-            segment << key << ": " << value << endline;
+            segment << key << ": " << value;
             return segment.str();
         }
         Segment Segment::getDeserialized(const std::string& segment) {
@@ -349,12 +349,6 @@ namespace pilib {
             std::getline(headstream, value);
             value.erase(std::remove_if(std::begin(value), std::end(value), [](char c) {return std::isspace(c); }), std::end(value));
             return Segment(std::move(key), std::move(value));
-        }
-
-        Request::Request(Method method, const std::string& resource, std::vector<Segment>& headers, Version version) : method(method), resource(resource), version(version) {
-            for (int i = 0; i < headers.size(); i++) {
-                this->headers.insert(std::pair<std::string, std::string>(headers[i].getKey(), headers[i].getValue()));
-            }
         }
 
         Request::Request(const std::string& request) {
@@ -370,17 +364,25 @@ namespace pilib {
                 //check for blank line (ex. POST -> deal with the payload)
                 pilib::clearEnd(buffer);
                 Segment line(std::move(buffer));
-                this->headers.insert(std::pair<std::string, std::string>(line.getKey(), line.getValue()));
+                this->headers.emplace_back(line);
             }
         }
 
         std::string Request::getSerialized() {
             std::ostringstream buffer;
             buffer << Methods::getString(this->method) << space << this->resource << space << Versions::getString(this->version) << endline;
-            for (auto it = this->headers.begin(); it != this->headers.end(); it++) {
-                buffer << Segment::getSerialized(it->first, it->second) << endline;
+            for (int i = 0; i < headers.size(); i++) {
+                buffer << headers[i].getSerialized() << endline;
             }
             return buffer.str();
+        }
+
+        std::map<std::string, std::string> Request::headerMap(std::vector<Segment>& headers) {
+            std::map<std::string, std::string> ret;
+            for (int i = 0; i < headers.size(); i++) {
+                ret.insert(std::make_pair(headers[i].getKey(), headers[i].getValue()));
+            }
+            return ret;
         }
 
         Version* Request::intVersion() {
@@ -392,16 +394,8 @@ namespace pilib {
         std::string* Request::intResource() {
             return &(this->resource);
         }
-        std::map<std::string, std::string>* Request::intHeaders() {
+        std::vector<Segment>* Request::intHeaders() {
             return &(this->headers);
-        }
-
-        std::vector<Segment> Request::getHeaders() {
-            std::vector<Segment> vec;
-            for (auto it = this->headers.begin(); it != this->headers.end(); it++) {
-                vec.emplace_back(std::move(Segment(it->first, it->second)));
-            }
-            return vec;
         }
 
         std::string Request::getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version) {
@@ -420,12 +414,6 @@ namespace pilib {
             }
         }
 
-        Response::Response(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version) : responsecode(responsecode), body(body), version(version) {
-            for (int i = 0; i < headers.size(); i++) {
-                this->headers.insert(std::pair<std::string, std::string>(headers[i].getKey(), headers[i].getValue()));
-            }
-        }
-
         Response::Response(const std::string& response) {
             std::istringstream rstream(response);
             std::string buffer;
@@ -440,27 +428,39 @@ namespace pilib {
                     break;
                 }
                 Segment line(std::move(buffer));
-                this->headers.insert(std::pair<std::string, std::string>(line.getKey(), line.getValue()));
+                this->headers.emplace_back(line);
             }
             this->body = response.substr(rstream.tellg());
-        }
-
-        std::string Response::getSerialized() {
-            std::ostringstream buffer;
-            buffer << Codes::getString(this->responsecode) << space << Versions::getString(this->version) << endline;
-            for (auto it = this->headers.begin(); it != this->headers.end(); it++) {
-                buffer << Segment::getSerialized(it->first, it->second) << endline;
-            }
-            buffer << endline << this->body << endline;
-            return buffer.str();
         }
 
         void Response::lateConstruct(Code responsecode, std::vector<Segment>& headers, const std::string& body) {
             this->responsecode = responsecode;
             this->body = body;
+            this->headers = headers;
+        }
+
+        void Response::noBody(Code responsecode, std::vector<Segment>& headers) {
+            this->responsecode = responsecode;
+            this->body = "";
+            this->headers = headers;
+        }
+
+        std::string Response::getSerialized() {
+            std::ostringstream buffer;
+            buffer << Versions::getString(this->version) << space << Codes::getString(this->responsecode) << endline;
             for (int i = 0; i < headers.size(); i++) {
-                this->headers.insert(std::pair<std::string, std::string>(headers[i].getKey(), headers[i].getValue()));
+                buffer << headers[i].getSerialized() << endline;
             }
+            buffer << endline << this->body << endline;
+            return buffer.str();
+        }
+
+        std::map<std::string, std::string> Response::headerMap(std::vector<Segment>& headers) {
+            std::map<std::string, std::string> ret;
+            for (int i = 0; i < headers.size(); i++) {
+                ret.insert(std::make_pair(headers[i].getKey(), headers[i].getValue()));
+            }
+            return ret;
         }
 
         Code* Response::intCode() {
@@ -472,16 +472,8 @@ namespace pilib {
         std::string* Response::intBody() {
             return &(this->body);
         }
-        std::map<std::string, std::string>* Response::intHeaders() {
+        std::vector<Segment>* Response::intHeaders() {
             return &(this->headers);
-        }
-
-        std::vector<Segment> Response::getHeaders() {
-            std::vector<Segment> vec;
-            for (auto it = this->headers.begin(); it != this->headers.end(); it++) {
-                vec.emplace_back(std::move(Segment(it->first, it->second)));
-            }
-            return vec;
         }
 
         uint Response::bodyLen() {
@@ -507,24 +499,68 @@ namespace pilib {
 
         std::string HttpHandler::rPath(const char* item) {
             std::string temp = root;
-            if (item = "/") {
+            if (std::string(item) == "/") {
                 temp.append(resources::home);
                 return temp;
             }
-            //check for PiSHARE path 
+            //check for PiSHARE path here
             temp.append(item);
             return temp;
         }
 
         void HttpHandler::respond(int socket, const std::string& input) {
             Request req(input);
-            Response response;
+            Response response(this->version);
             std::vector<Segment> headers;
+            std::ifstream reader;
+            //search and store content length 
+            std::string path = rPath((*req.intResource()).c_str());
+            debug(path);
             switch (*req.intMethod()) {
             case Method::GET:
-
+            {
+                reader.open(path.c_str(), std::ios::binary);
+                if (reader.is_open()) {
+                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    //content type system
+                    headers.emplace_back(Segment("Type", getMegaMimeType(path.c_str())));
+                    headers.emplace_back(Segment("Length", std::to_string(body.length())));
+                    response.lateConstruct(Code::OK, headers, body);
+                    break;
+                }
+                else {
+                    reader.open(rPath("/error.html"));
+                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                    headers.emplace_back(Segment("Length", std::to_string(body.length())));
+                    headers.emplace_back(Segment("Type", "text/html"));
+                    response.lateConstruct(Code::NOT_FOUND, headers, body);
+                    break;
+                }
+            }
+            break;
             case Method::HEAD:
-
+            {
+                reader.open(path, std::ios::binary);
+                if (reader.is_open()) {
+                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    //content type system
+                    headers.emplace_back(Segment("Type", getMegaMimeType(path.c_str())));
+                    headers.emplace_back(Segment("Length", std::to_string(body.length())));
+                    response.noBody(Code::OK, headers);
+                    break;
+                }
+                else {
+                    reader.open(rPath("/error.html"));
+                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                    headers.emplace_back(Segment("Type", "text/html"));
+                    headers.emplace_back(Segment("Length", std::to_string(body.length())));
+                    response.noBody(Code::NOT_FOUND, headers);
+                    break;
+                }
+            }
+            break;
             case Method::CONNECT:
             case Method::DELETE:
             case Method::OPTIONS:
@@ -533,17 +569,21 @@ namespace pilib {
             case Method::PUT:
             case Method::TRACE:
             default:
-                std::ifstream reader(rPath("/error.html"));
+            {
+                reader.open(rPath("/error.html"));
                 std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
                 pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_IMPLEMENTED).c_str());
                 headers.emplace_back(Segment("Type", "text/html"));
-                std::ostringstream buf;
-                buf << body.length();
-                headers.emplace_back(Segment("Length", buf.str()));
+                headers.emplace_back(Segment("Length", std::to_string(body.length())));
                 response.lateConstruct(Code::NOT_IMPLEMENTED, headers, body);
             }
+            break;
+            }
             std::string ret = response.getSerialized();
+            debug(ret);
             this->state.sent = send(socket, ret.c_str(), ret.length(), 0);
+            //debug("Send successful - Returning...");
+            return;
         }
 
         HttpServer::HttpServer(const char* root, int max_accepts, Version version) : BaseServer(NULL, "http", max_accepts), handler(root, version), version(version) {
@@ -582,16 +622,16 @@ namespace pilib {
                     perror("Error accepting connection");
                     continue;
                 }
-                /*char ip[INET_ADDRSTRLEN];
+                char ip[INET_ADDRSTRLEN];
                 inet_ntop(naddr.ss_family, &(((sockaddr_in*)&naddr)->sin_addr), ip, sizeof(ip));
-                out << "Got connection from: " << ip << newline;*/
+                out << "Got connection from: " << ip << newline;
                 if (recv(nsock, buffer, sizeof(buffer), 0) < 0) {
                     perror("Recv error");
                 }
-                //out << "Got request from: " << ip << newline << buffer << newline;
+                out << "Got request from: " << ip << newline << buffer << newline;
                 this->handler.respond(nsock, std::string(buffer));
                 close(nsock);
-                //out << "Closed connection to: " << ip << newline;
+                out << "Closed connection to: " << ip << newline;
             }
             close(intSock());
         }
@@ -607,11 +647,11 @@ namespace pilib {
                     perror("Error accepting connection");
                     continue;
                 }
-                /*char ip[INET_ADDRSTRLEN];
+                char ip[INET_ADDRSTRLEN];
                 inet_ntop(naddr.ss_family, &(((sockaddr_in*)&naddr)->sin_addr), ip, sizeof(ip));
-                out << "Got connection from: " << ip << newline;*/
+                out << "Got connection from: " << ip << newline;
                 while ((readlen = recv(nsock, buffer, sizeof(buffer), 0)) > 0) {
-                    //out << "Got request from: " << ip << " {len: " << readlen << "}:" << newline << buffer << newline;
+                    out << "Got request from: " << ip << " {len: " << readlen << "}:" << newline << buffer << newline;
                     if (!rc) {
                         send(nsock, NULL, 0, 0);
                     }
@@ -623,25 +663,10 @@ namespace pilib {
                 if (readlen < 0) {
                     perror("Recv error");
                 }
-                //out << "Connection ended: " << ip << " {check: " << readlen << "}" << newline;
+                out << "Connection ended: " << ip << " {check: " << readlen << "}" << newline;
                 close(nsock);
             }
             close(intSock());
         }
-    }
-
-    void errorPage(const char* file, pilib::http::Code code, std::ostream& output) {
-        std::ifstream reader(file);
-        std::string buffer((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
-        pilib::replace(buffer, "{{code}}", pilib::http::Codes::getString(code).c_str());
-        output << buffer;
-    }
-
-    void sendHtml(std::ostream& output) {
-        std::ostringstream content;
-        errorPage("/data/pihost/resources/error.html", pilib::http::Code::NOT_IMPLEMENTED, content);
-        output << pilib::http::Versions::getString(pilib::http::Version::HTTP_1_1) 
-            << pilib::http::Codes::getString(pilib::http::Code::OK) << newline << "Type: " 
-            << http::types::text::html << newline << "Length: " << strlen(content.str().c_str()) << newline << newline << content.str();
     }
 }

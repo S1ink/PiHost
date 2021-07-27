@@ -2,22 +2,6 @@
 #define PILIB_FULL
 #include "pilib.h"
 
-//typedef void(*function)(std::ostream&);
-//
-//void streamWrap(pilib::lstream& fout, function func) {
-//	fout.openOutput();
-//	func(fout);
-//	fout.close();
-//
-//	fout.openInput();
-//	std::cout << fout.rdbuf() << newline;
-//	fout.close();
-//}
-//
-//void work(std::ostream& output) {
-//	output << pilib::dateStamp() << ": work done?" << newline;
-//}
-
 std::atomic_bool run = { true };
 //std::atomic_bool run2 = { true };
 
@@ -32,30 +16,8 @@ int main(int argc, char* argv[]) {
 	pilib::StopWatch runtime;
 	std::thread end(endCondition);
 
-	/*netstat::transfer nets;
-	while (run) {
-		netstat::ethernet(nets);
-		std::cout << bytePrefixes(nets.down) << "/s down" << newline << bytePrefixes(nets.up) << "/s up" << newline << newline;
-	}*/
-
-	/*networking::Server webserver;
-	webserver.prep();
-	webserver.launch(std::ref(run), std::cout, networking::sendBinary);*/
-
-	/*file.open("/PiSHARE/Media/Audio/MCU/06 The First Bite Is the Deepest.m4a", std::ios::out | std::ios::binary);
-	file.write(&buffer[0], size);
-	file.close();*/
-
-	//pilib::lstream stream("/data/logs/work.txt", std::ios::trunc);
-	//std::thread th(pilib::loopingThread < CHRONO::seconds::rep, CHRONO::seconds::period, void, pilib::lstream&, function >, std::ref(run), CHRONO::seconds(5), CHRONO::seconds(5), streamWrap, std::ref(stream), work);
-
-	pilib::http::HttpServer server(pilib::http::resources::root);
+	pilib::http::HttpServer server(pilib::http::resources::root, 5, pilib::http::Version::HTTP_1_0);
 	server.serve(run);
-
-	/*std::vector <pilib::http::Segment> segs{pilib::http::Segment(std::string("Connection"), std::string("keep-alive"))};
-	pilib::http::Request req(pilib::http::Method::GET, std::string("/"), segs, pilib::http::Version(1));
-
-	std::cout << req.getSerialized() << newline;*/
 
 	end.join();
 	//th.join();

@@ -68,27 +68,6 @@ namespace pilib {
 			NETWORK_AUTHICATION_REQIRED = 511
 		};
 
-		namespace types {
-			//https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
-			namespace text {
-				CE_STR plain = "text/plain";
-				CE_STR html = "text/html";
-				CE_STR csv = "text/csv";
-				CE_STR css = "text/css";
-				CE_STR xml = "text/xml";
-			}
-			namespace image {
-				CE_STR gif = "image/gif";
-				CE_STR jpeg = "image/jpeg";
-				CE_STR png = "image/png";
-			}
-			namespace audio {}
-			namespace video {}
-			namespace app {}
-			namespace multi {}
-			namespace vnd {}
-		}
-
 		namespace resources {
 			CE_STR root = "/data/pihost/resources";
 			CE_STR relative_root = "../";
