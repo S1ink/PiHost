@@ -743,5 +743,75 @@ namespace pilib {
             }
             close(intSock());
         }
+
+        void HttpServer::serve_beta(const std::atomic_bool& rc, std::ostream& out) {
+            prepServer();
+            int nsock, readlen, maxfd = intSock();
+
+            timeval tbuff, checkup = { 1, 0 };
+            fd_set master, fdbuff;
+            FD_ZERO(&master);
+            FD_ZERO(&fdbuff);
+            FD_SET(intSock(), &master);
+
+            while (rc) {
+                tbuff = checkup;
+                fdbuff = master;
+                if (int sel = select((maxfd + 1), &fdbuff, NULL, NULL, &tbuff) <= 0) {
+                    if (sel == 0) { // timed out
+                        debug("timed out");
+                        continue;
+                    }
+                    if (sel == -1) {
+                        perror("Select error");
+                        exit(EXIT_FAILURE);   //or exit()
+                    }
+                }
+                for (int i = 0; i <= maxfd; i++) {
+                    if (FD_ISSET(i, &fdbuff)) {
+                        if (i == intSock()) {
+                            sockaddr_storage naddr; // create vector of "naddr"'s that represents all ip addresses
+                            socklen_t naddrlen = sizeof(naddr);
+                            if ((nsock = accept(intSock(), (sockaddr*)&naddr, &naddrlen)) < 0) {
+                                perror("Error accepting connection");
+                                continue;
+                            }
+                            FD_SET(nsock, &master);
+                            if (nsock > maxfd) {
+                                maxfd = nsock;
+                            }
+                            char ip[INET_ADDRSTRLEN];
+                            inet_ntop(naddr.ss_family, &(((sockaddr_in*)&naddr)->sin_addr), ip, sizeof(ip));
+                            out << "Got connection from: " << ip << newline;
+                        }
+                        else {
+                            char buffer[10000]; //put this outside because of large size
+                            if ((readlen = recv(nsock, buffer, sizeof(buffer), 0)) <= 0) {
+                                if (readlen == 0) {
+                                    // socket disconnected 
+                                }
+                                else {
+                                    perror("Recv error");
+                                }
+                                close(i);
+                                FD_CLR(i, &master);
+                            }
+                            else {
+                                if (!rc) {
+                                    send(i, NULL, 0, 0);
+                                }
+                                else {
+                                    this->handler.respond(i, std::string(buffer));
+                                    //memset(&buffer, 0, sizeof(buffer)); 
+                                }
+                            }
+
+                        }
+                    }
+                    
+                }
+            }
+            close(intSock());
+        }
     }
 }

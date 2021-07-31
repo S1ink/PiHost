@@ -218,6 +218,7 @@ namespace pilib {
 			void serve(const std::atomic_bool& rc, std::ostream& out = std::cout);
 			void serve1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);
 			void serve1_1(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void serve_beta(const std::atomic_bool& rc, std::ostream& out = std::cout);
 		};
 	}
 }

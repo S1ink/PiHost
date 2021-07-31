@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 	std::thread end(endCondition);
 
 	pilib::http::HttpServer server(pilib::http::resources::root, 5, pilib::http::Version::HTTP_1_1);
-	server.serve(run);
+	server.serve_beta(run);
 
 	end.join();
 	//th.join();
