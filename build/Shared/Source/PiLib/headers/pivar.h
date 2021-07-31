@@ -71,8 +71,8 @@ namespace pilib {
 		namespace resources {
 			CE_STR root = "/data/pihost/resources";
 			CE_STR relative_root = "../";
-			CE_STR home = "index.html";
-			CE_STR error_page = "error.html";
+			CE_STR home = "/index.html";
+			CE_STR error_page = "/error.html";
 		}
 	}
 }

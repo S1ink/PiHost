@@ -1,10 +1,29 @@
 #pragma once
 
-//custom
-#include "pigpio.h"
-#include "pivar.h"
+#ifdef INCLUDE_ALL
+#define STD_FULL
+#define LIBS
+#define VARS
+#endif
 
-//io
+#ifdef STD_FULL
+#define IO
+#define TIME
+#define TYPE
+#define CONTAINERS
+#define ALGO
+#define OS
+#endif
+
+#ifdef LIBS
+#include "pigpio.h"
+#endif
+
+#ifdef VARS
+#include "pivar.h"
+#endif
+
+#ifdef IO
 #include <iostream>
 #include <stdio.h>
 #include <cstdio>
@@ -12,28 +31,34 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#endif
 
-//timing
+#ifdef TIME
 #include <ctime>
 #include <chrono>
 #include <thread>
+#endif
 
-//memory/types
+#ifdef TYPE
 #include <memory>
 #include <atomic>
 #include <typeinfo>
+#endif
 
-//containers
+#ifdef CONTAINERS
 #include <array>
 #include <vector>
 #include <map>
 #include <unordered_map>
+#endif
 
-//algo
+#ifdef ALGO
 #include <algorithm>
 #include <regex>
+#include <cstdarg>
+#endif
 
-//os
+#ifdef OS
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -41,3 +66,4 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
+#endif

@@ -1,4 +1,4 @@
-#define STD_FULL
+#define INCLUDE_ALL
 #define PILIB_FULL
 #include "pilib.h"
 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	pilib::StopWatch runtime;
 	std::thread end(endCondition);
 
-	pilib::http::HttpServer server(pilib::http::resources::root, 5, pilib::http::Version::HTTP_1_0);
+	pilib::http::HttpServer server(pilib::http::resources::root, 5, pilib::http::Version::HTTP_1_1);
 	server.serve(run);
 
 	end.join();

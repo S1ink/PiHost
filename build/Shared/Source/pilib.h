@@ -2,15 +2,14 @@
 
 //#define PILIB_FULL
 
-#ifdef STD_FULL
 #include "PiLib/headers/include.h"
-#endif
 
 #ifdef LEGACY
 #ifdef PILIB_FULL
 #undef PILIB_FULL
 #endif
 #include "PiLib/Legacy/pilib.h"
+#define VARS
 #endif
 
 #ifdef PILIB_FULL
@@ -22,7 +21,6 @@
 #define THREADING
 #define NETWORKING
 #define GPIO
-#define VARS
 #endif
 
 #ifdef EXTERNAL
@@ -55,8 +53,4 @@
 
 #ifdef GPIO
 #include "PiLib/headers/gpio.h"
-#endif
-
-#ifdef VARS
-#include "PiLib/headers/pivar.h"
 #endif

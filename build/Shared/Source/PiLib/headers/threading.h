@@ -1,6 +1,9 @@
 #pragma once
 
+#define INCLUDE_ALL
 #include "include.h"
+#undef INCLUDE_ALL
+
 #include "timing.h"
 #include "utility.h"
 

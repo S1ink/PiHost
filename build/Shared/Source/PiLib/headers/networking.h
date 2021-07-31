@@ -1,24 +1,12 @@
 #pragma once
 
+#define INCLUDE_ALL
 #include "include.h"
+#undef INCLUDE_ALL
 
 #include "utility.h"
 #include "info.h"
 #include "../External/mimetype.h"
-
-/* SERVER PROCESS
-* - set up "addrinfo"'s base on type of server -> getaddrinfo()
-* - create main socket from ^ -> socket()
-* - bind the socket -> bind()
-* - start listening -> listen()
-* - send()/receive()
-* 
-*  VARIABLES
-* addrinfo:
-* - "family" -> ipv4 or ipv6
-* - "socktype" -> TCP or UDP (stream or dgram)
-* - ""
-*/
 
 namespace pilib {
 	class BaseServer {
@@ -64,22 +52,6 @@ namespace pilib {
 	namespace http {
 		//enums moved to {pivar.h}
 
-		/*template<typename type>	//implement for less lines?
-		class HDB {
-		private:
-			static const std::unordered_map<std::string, type> typemap;
-			static const std::unordered_map<type, std::string> stringmap;
-		public:
-			static type getType(const std::string& str) {
-				auto search = typemap.find(str);
-				return search->second;
-			}
-			static std::string getString(type type) {
-				auto search = stringmap.find(type);
-				return search->second;
-			}
-		};*/
-
 		//implement checks on conversion functions
 		struct Versions {
 		private:
@@ -120,6 +92,7 @@ namespace pilib {
 			Segment(const std::string&& key, const std::string&& value) : key(std::move(key)), value(std::move(value)) {}
 			Segment(const std::string& segment);
 			Segment(const std::string&& segment);
+			Segment(std::pair<std::string, std::string> pair);
 
 			std::string getKey();
 			std::string getValue();
@@ -131,30 +104,54 @@ namespace pilib {
 			static std::string getSerialized(const std::string& key, const std::string& value);
 			static Segment getDeserialized(const std::string& segment);
 		};
+		//create inherited classes that define common headers ^
+
+		class HeaderList {
+		private:
+			std::vector<Segment> headers;
+		public:
+			HeaderList(){}
+			HeaderList(const std::vector<Segment>& list) : headers(list) {}
+			HeaderList(const size_t size);
+			HeaderList(const HeaderList& other) : headers(other.headers) {}
+			HeaderList(const std::string& body);
+
+			void add(const Segment& header);
+			void add(const std::string& key, const std::string& value);
+			void add(const std::vector<Segment>& list);
+			void add(const std::string& body);
+
+			void reserve(size_t reserve);
+			void reset();
+			std::string find(std::string key);
+			std::string allHeaders();
+
+			std::vector<Segment>* intHeaders();
+
+			static std::unordered_map<std::string, std::string> headerMap(std::vector<Segment>& headers);
+		};
 
 		class Request {
 		private:
 			Version version;
 			Method method;
 			std::string resource;
-			std::vector<Segment> headers;
+			HeaderList headers;
 		public:
-			//create helper method for making bulk {Segments} ~somewhere
-			Request(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1)
+			//create helper method for making bulk {Segments} ~somewhere ~~ >> HeaderList << 
+			Request(Method method, const std::string& resource, const HeaderList& headers, Version version = Version::HTTP_1_1)
 				: version(version), method(method), resource(resource), headers(headers) {}
 			Request(const std::string& reqest);
 
 			std::string getSerialized();
 
-			std::map<std::string, std::string> headerMap(std::vector<Segment>& headers);
-
 			Version* intVersion();
 			Method* intMethod();
 			std::string* intResource();
-			std::vector<Segment>* intHeaders();
+			HeaderList* intHeaders();
 
 			static std::string getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);	//add overload with {move}
-			static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment> headers, Version version = Version::HTTP_1_1);
+			static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);
 			//static (deserialize) {=constructor} methods here?
 		};
 
@@ -162,50 +159,50 @@ namespace pilib {
 		private:
 			Code responsecode;
 			Version version;
-			std::vector<Segment> headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
+			HeaderList headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
 			std::string body;
 		public:
 			Response(Version version = Version::HTTP_1_1) : version(version) {}
-			Response(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1)
+			Response(Code responsecode, const HeaderList& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1)
 				: responsecode(responsecode), version(version), headers(headers), body(body) {}	//add overload with {move}
 			Response(const std::string& response);
 
-			void lateConstruct(Code responsecode, std::vector<Segment>& headers, const std::string& body);
-			void noBody(Code responsecode, std::vector<Segment>& headers);
+			void update(Code responsecode, const std::vector<Segment>& headers, const std::string& body = std::string());
+			void update(Code responsecode, HeaderList& headers, const std::string& body = std::string());
 			std::string getSerialized();
-
-			std::map<std::string, std::string> headerMap(std::vector<Segment>& headers);
 
 			Code* intCode();
 			Version* intVersion();
 			std::string* intBody();
-			std::vector<Segment>* intHeaders();
+			HeaderList* intHeaders();
 
 			uint bodyLen();
 
-			static std::string getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);
-			static void getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version = Version::HTTP_1_1);
+			static std::string getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);
+			static void getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);
 			//static (deserialize) {=constructor} methods here?
 		};
 
 		class HttpHandler {
 		private:
-			struct State {
+			/*struct State {
 				int sent;
 				std::string bbuff;
 
-			};
+			};*/
 
 			std::string root;
 			Version version;
-			State state;
+			//Request request;
+			Response response;
+			int sent;
 
 			std::string rPath(const char* item);
 		public:
-			HttpHandler(const char* root, Version version = Version::HTTP_1_1) : root(root), version(version) {}
+			HttpHandler(const char* root = resources::root, Version version = Version::HTTP_1_1) : root(root), version(version), response(version) /*, request(version)*/ {}
 
 			//server
-			void respond(int socket, const std::string& input);
+			void respond(const int& socket, const std::string& input);
 			//client
 			//void request(const std::string& input, std::ostream& output, bool init = false); 
 		};
