@@ -5,6 +5,91 @@
 #undef INCLUDE_ALL
 
 namespace pilib {
+	class SYS {
+		// all stats here
+	};
+
+	class CPU {
+	private:
+		class CoreData {
+		private:
+			enum class States {
+				USER, NICE, SYSTEM,
+				IDLE, IOWAIT, IRQ,
+				SOFTIRQ, STEAL,
+				GUEST, GUEST_NICE,
+				TOTAL
+			};
+			static const std::array<States, 2> s_idle;
+			static const std::array<States, 8> s_active;
+		public:
+			std::string title;
+			uint data[(uint)States::TOTAL];
+
+			void update();
+			//create option to select line to update from
+
+			CoreData(){}
+			CoreData(void*);
+			CoreData(const CoreData& other);
+
+			uint getIdle();	//return value is in usr_hz -> the amount to time chunks in said state
+			uint getActive();
+			uint getTotal();
+			uint getState(States state);
+
+			static void readAll(std::vector<CoreData>& lines);
+		};
+
+		uint c_cores;
+		CoreData *cbuff1, *cbuff2;
+	public:
+		//typedef std::pair<std::string, float> Util;
+		typedef std::map<std::string, float> UtilMap;
+
+		CPU();
+		~CPU();
+
+		uint count();
+		//static uint count();
+		
+		static float average(CoreData& first, CoreData& second);
+		static void averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second, UtilMap& out);
+		static UtilMap averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second);
+
+		static float temp();
+
+		template<typename rep, typename period>
+		static float percent(CHRONO::duration<rep, period> interval) {
+			CoreData second, first(nullptr);
+			std::this_thread::sleep_for(interval);
+			second.update();
+			return average(first, second);
+		}
+		static float percent(int seconds = 1);
+
+		template<typename rep, typename period>
+		static UtilMap percentMap(CHRONO::duration<rep, period> interval) {
+			std::vector<CoreData> first, second;
+			CoreData::readAll(first);
+			std::this_thread::sleep_for(interval);
+			CoreData::readAll(second);
+			return averageVec(first, second);
+		}
+		static UtilMap percentMap(int seconds = 1);
+
+		static float searchUtil(const std::string& search, UtilMap& map);
+		//static float searchUtil(const std::string& item);
+	};
+
+	class NET {
+	private:
+
+	public:
+
+	};
+
+	//old
 	namespace sys {
 		namespace cpu {
 			constexpr int parsable_states = 10;
@@ -47,3 +132,19 @@ namespace pilib {
 	char* dateStamp();
 	char* dateStamp(time_t* tme);
 }
+
+/* CPU States
+user – time spent in user mode.
+nice – time spent in user mode with low priority.
+system – time spent in system mode.
+idle – time spent in the idle task.
+iowait –  time waiting for I/O to complete.
+irq – time servicing hardware interrupts.
+softirq – time servicing software interrupts.
+steal – time spent in other operating systems when running in a virtualized environment.
+guest – time spent running a virtual CPU for guest operating systems.
+guest_nice – time spent running a low priority virtual CPU for guest operating systems.
+* * * *
+idle + iowait = time doing nothing (usr_hz)
+all others = time spend utilized
+*/

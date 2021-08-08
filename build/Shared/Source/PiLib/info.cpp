@@ -1,6 +1,156 @@
 #include  "headers/info.h"
 
 namespace pilib {
+	const std::array<CPU::CoreData::States, 2> CPU::CoreData::s_idle = {
+		States::IDLE, States::IOWAIT
+	};
+	const std::array<CPU::CoreData::States, 8> CPU::CoreData::s_active = {
+		States::USER, States::NICE, States::SYSTEM,
+		States::IRQ, States::SOFTIRQ, States::STEAL,
+		States::GUEST, States::GUEST_NICE
+	};
+
+	void CPU::CoreData::update() {
+		std::ifstream reader(locations::stats::cpu);
+		reader >> this->title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			reader >> this->data[i];
+		}
+		reader.close();
+	}
+	CPU::CoreData::CoreData(void*) {
+		update();
+	}
+	CPU::CoreData::CoreData(const CoreData& other) {
+		std::cout << "caught you" << newline;
+	}
+	uint CPU::CoreData::getIdle() {
+		uint ret = 0;
+		for (uint i = 0; i < s_idle.size(); i++) {
+			ret += this->data[(uint)s_idle[i]];
+		}
+		return ret;
+	}
+	uint CPU::CoreData::getActive() { //switch to list of add's?
+		uint ret = 0;
+		for (uint i = 0; i < s_active.size(); i++) {
+			ret += this->data[(uint)s_active[i]];
+		}
+		return ret;
+	}
+	uint CPU::CoreData::getTotal() {
+		uint ret = 0;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			ret += this->data[i];
+		}
+		return ret;
+	}
+	uint CPU::CoreData::getState(States state) {
+		return this->data[(uint)state];
+	}
+
+	void CPU::CoreData::readAll(std::vector<CoreData>& lines) {
+		std::ifstream reader(locations::stats::cpu);
+		std::string buffer;
+		while (std::getline(reader, buffer)) {
+			if (!buffer.compare(0, 3, "cpu")) {
+				std::istringstream line(buffer);
+				lines.emplace_back();
+				CoreData& core = lines.back();
+				line >> core.title;
+				for (uint i = 0; i < (uint)States::TOTAL; i++) {
+					line >> core.data[i];
+				}
+			}
+			else {
+				break;
+			}
+		}
+		reader.close();
+	}
+
+	CPU::CPU() {
+		std::ifstream reader(locations::stats::cpu);
+		std::string buffer;
+		while (std::getline(reader, buffer)) {
+			if ((!buffer.compare(0, 3, "cpu")) && isdigit(buffer[3])) {
+				this->c_cores += 1;
+			}
+			/*else {
+				break;
+			}*/
+		}
+		reader.close();
+		cbuff1 = new CoreData[this->c_cores];
+		cbuff2 = new CoreData[this->c_cores];
+		std::cout << "pointers inited" << newline;
+	}
+	CPU::~CPU() {
+		if (cbuff1 != nullptr) {
+			delete[](cbuff1);
+		}
+		if (cbuff2 != nullptr) {
+			delete[](cbuff2);
+		}
+	}
+
+	float CPU::average(CoreData& first, CoreData& second) {
+		float active = (float)(second.getActive() - first.getActive());
+		return active / (active + ((float)(second.getIdle() - first.getIdle())));
+	}
+	void CPU::averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second, UtilMap& out) {
+		float active, total;
+		for (uint i = 0; i < first.size(); i++) {
+			active = (float)(second[i].getActive() - first[i].getActive());
+			total = (float)(second[i].getTotal() - first[i].getTotal());
+			out.emplace(std::make_pair(first[i].title, (100.f*active/total)));
+		}
+	}
+	CPU::UtilMap CPU::averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second) {
+		UtilMap ret;
+		float active, total;
+		for (uint i = 0; i < first.size(); i++) {
+			active = (float)(second[i].getActive() - first[i].getActive());
+			total = (float)(second[i].getTotal() - first[i].getTotal());
+			ret.emplace(std::make_pair(first[i].title, (100.f*active/total)));
+		}
+		return ret;
+	}
+
+	float CPU::temp() {
+		float systemp;
+		FILE* thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+		fscanf(thermal, "%f", &systemp);
+		fclose(thermal);
+		return (systemp/1000.f);
+	}
+
+	float CPU::percent(int seconds) {
+		CoreData second, first(nullptr);
+		std::this_thread::sleep_for(CHRONO::seconds(seconds));
+		second.update();
+		return average(first, second);
+	}
+
+	CPU::UtilMap CPU::percentMap(int seconds) {
+		std::vector<CoreData> first, second;
+		CoreData::readAll(first);
+		std::this_thread::sleep_for(CHRONO::seconds(seconds));
+		CoreData::readAll(second);
+		return averageVec(first, second);
+	}
+
+	float CPU::searchUtil(const std::string& search, UtilMap& map) {
+		auto res = map.find(search);
+		if (res != map.end()) {
+			return res->second;
+		}
+		return 0.f;
+	}
+
+//old
+//********************************************************************************************
+
 	namespace sys {
 		namespace cpu {
 			size_t getIdle(const LineParse& data) {

@@ -1,6 +1,18 @@
 #include "headers/networking.h"
 
 namespace pilib {
+    void getSockIp(int socket, char* ip) {
+        sockaddr_storage addr;
+        socklen_t addrlen = sizeof(addr);
+        getpeername(socket, (sockaddr*)&addr, &addrlen);
+        if (addr.ss_family == AF_INET) {
+            inet_ntop(AF_INET, &(((sockaddr_in*)&addr)->sin_addr), ip, INET_ADDRSTRLEN);
+        }
+        else {
+            inet_ntop(AF_INET6, &(((sockaddr_in6*)&addr)->sin6_addr), ip, INET6_ADDRSTRLEN);
+        }
+    }
+
     BaseServer::~BaseServer() {
         freeaddrinfo(list);
     }
@@ -399,7 +411,7 @@ namespace pilib {
         }
         std::string HeaderList::allHeaders() {
             std::ostringstream buffer;
-            for (int i = 0; i < this->headers.size(); i++) {
+            for (uint i = 0; i < this->headers.size(); i++) {
                 buffer << this->headers[i].getSerialized() << endline;
             }
             return buffer.str();
@@ -411,7 +423,7 @@ namespace pilib {
 
         std::unordered_map<std::string, std::string> HeaderList::headerMap(std::vector<Segment>& headers) {
             std::unordered_map<std::string, std::string> ret;
-            for (int i = 0; i < headers.size(); i++) {
+            for (uint i = 0; i < headers.size(); i++) {
                 ret.insert(std::make_pair(headers[i].getKey(), headers[i].getValue()));
             }
             return ret;
@@ -459,7 +471,7 @@ namespace pilib {
         std::string Request::getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version) {
             std::ostringstream buffer;
             buffer << Methods::getString(method) << space << resource << space << Versions::getString(version) << endline;
-            for (int i = 0; i < headers.size(); i++) {
+            for (uint i = 0; i < headers.size(); i++) {
                 buffer << headers[i].getSerialized() << endline;
             }
             return buffer.str();
@@ -467,7 +479,7 @@ namespace pilib {
 
         void Request::getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, Version version) {
             buffer << Methods::getString(method) << space << resource << space << Versions::getString(version) << endline;
-            for (int i = 0; i < headers.size(); i++) {
+            for (uint i = 0; i < headers.size(); i++) {
                 buffer << headers[i].getSerialized() << endline;
             }
         }
@@ -531,7 +543,7 @@ namespace pilib {
         std::string Response::getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version) {
             std::ostringstream buffer;
             buffer << Codes::getString(responsecode) << space << Versions::getString(version) << endline;
-            for (int i = 0; i < headers.size(); i++) {
+            for (uint i = 0; i < headers.size(); i++) {
                 buffer << headers[i].getSerialized() << endline;
             }
             buffer << endline << body << endline;
@@ -539,7 +551,7 @@ namespace pilib {
         }
         void Response::getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version) {
             buffer << Codes::getString(responsecode) << space << Versions::getString(version) << endline;
-            for (int i = 0; i < headers.size(); i++) {
+            for (uint i = 0; i < headers.size(); i++) {
                 buffer << headers[i].getSerialized() << endline;
             }
             buffer << endline << body << endline;
@@ -655,7 +667,7 @@ namespace pilib {
             }
             }
             std::string ret = this->response.getSerialized();
-            debug(ret);
+            //debug(ret);
             this->sent = send(socket, ret.c_str(), ret.length(), 0);
             //debug("Send successful - Returning...");
             return;
@@ -747,6 +759,11 @@ namespace pilib {
         void HttpServer::serve_beta(const std::atomic_bool& rc, std::ostream& out) {
             prepServer();
             int nsock, readlen, maxfd = intSock();
+            char buffer[10000];
+            char ipbuff[INET6_ADDRSTRLEN];
+
+            sockaddr_storage naddr;
+            socklen_t naddrlen = sizeof(naddr);
 
             timeval tbuff, checkup = { 1, 0 };
             fd_set master, fdbuff;
@@ -757,22 +774,13 @@ namespace pilib {
             while (rc) {
                 tbuff = checkup;
                 fdbuff = master;
-                if (int sel = select((maxfd + 1), &fdbuff, NULL, NULL, &tbuff) <= 0) {
-                    if (sel == 0) { // timed out
-                        debug("timed out");
-                        continue;
-                    }
-                    if (sel == -1) {
-                        perror("Select error");
-                        exit(EXIT_FAILURE);   //or exit()
-                    }
+                if (select((maxfd + 1), &fdbuff, NULL, NULL, &tbuff) == -1) {
+                    pilib::exitError("Select error");
                 }
                 for (int i = 0; i <= maxfd; i++) {
                     if (FD_ISSET(i, &fdbuff)) {
                         if (i == intSock()) {
-                            sockaddr_storage naddr; // create vector of "naddr"'s that represents all ip addresses
-                            socklen_t naddrlen = sizeof(naddr);
-                            if ((nsock = accept(intSock(), (sockaddr*)&naddr, &naddrlen)) < 0) {
+                            if ((nsock = accept(i, (sockaddr*)&naddr, &naddrlen)) < 0) {
                                 perror("Error accepting connection");
                                 continue;
                             }
@@ -780,15 +788,14 @@ namespace pilib {
                             if (nsock > maxfd) {
                                 maxfd = nsock;
                             }
-                            char ip[INET_ADDRSTRLEN];
-                            inet_ntop(naddr.ss_family, &(((sockaddr_in*)&naddr)->sin_addr), ip, sizeof(ip));
-                            out << "Got connection from: " << ip << newline;
+                            pilib::getSockIp(nsock, ipbuff);
+                            out << "Got connection from: " << ipbuff << newline;
                         }
                         else {
-                            char buffer[10000]; //put this outside because of large size
                             if ((readlen = recv(nsock, buffer, sizeof(buffer), 0)) <= 0) {
                                 if (readlen == 0) {
-                                    // socket disconnected 
+                                    getSockIp(i, ipbuff);
+                                    out << "Connection ended: " << ipbuff << newline;
                                 }
                                 else {
                                     perror("Recv error");
@@ -801,8 +808,10 @@ namespace pilib {
                                     send(i, NULL, 0, 0);
                                 }
                                 else {
+                                    getSockIp(i, ipbuff);
+                                    out << "Got request from: " << ipbuff << " {length: " << readlen << "}:" << newline;
                                     this->handler.respond(i, std::string(buffer));
-                                    //memset(&buffer, 0, sizeof(buffer)); 
+                                    memset(&buffer, 0, sizeof(buffer)); //may need to include this above also
                                 }
                             }
 

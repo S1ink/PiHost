@@ -7,6 +7,15 @@
 #include "info.h"
 
 namespace pilib {
+	//lstream
+	/*class dstream : public std::basic_ostream<char> {
+	private:
+
+	public:
+		dstream(const std::ostream& type);
+	};*/
+
+	//iofstream
 	class lstream : public std::basic_fstream<char> {
 #define OMODE std::_Ios_Openmode
 	private:
@@ -14,8 +23,10 @@ namespace pilib {
 		OMODE modes;
 	public:
 		lstream() : std::basic_fstream<char>() {}
-		lstream(const char* file, OMODE modes = (std::ios::in | std::ios::out)) : std::basic_fstream<char>(), file(file), modes(modes) {}
-		lstream(const char* file, uint8_t init, OMODE modes = (std::ios::in | std::ios::out)) : std::basic_fstream<char>(file, modes), file(file), modes(modes) {}
+		lstream(const char* file, OMODE modes = (std::ios::in | std::ios::out)) : 
+			std::basic_fstream<char>(), file(file), modes(modes) {}
+		lstream(const char* file, uint8_t init, OMODE modes = (std::ios::in | std::ios::out)) : 
+			std::basic_fstream<char>(file, modes), file(file), modes(modes) {}
 
 		void setData(const char* file, OMODE modes = (std::ios::in | std::ios::out));
 		void setData(OMODE modes);
@@ -36,10 +47,12 @@ namespace pilib {
 	};
 
 	void exec(const char* command, std::ostream& output);
+
 	int aptUpdate();
 	int aptUpdate(std::ostream& out);
 	int aptUpgrade();
 	int aptUpgrade(std::ostream& out);
+
 	void rsync(std::ostream& output, const char* source, const char* destination, const char* options = "-va");
 	void rclone(std::ostream& output, const char* source, const char* destination, const char* mode = "sync");
 	void rsync(const char* source, const char* destination, const char* options = "-a");

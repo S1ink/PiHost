@@ -9,6 +9,9 @@
 #include "../External/mimetype.h"
 
 namespace pilib {
+	//network utilities
+	void getSockIp(int socket, char* ip);
+
 	class BaseServer {
 	private:
 		addrinfo* list;
@@ -19,7 +22,7 @@ namespace pilib {
 		BaseServer(
 			const char* ip, const char* port, int connections = 5, bool reusable = true,
 			int family = AF_INET, int socktype = SOCK_STREAM, int flags = AI_PASSIVE
-		) : ip(ip), port(port), connections(connections), reuse(reusable), family(family), socktype(socktype), flags(flags) {}
+		) : ip(ip), port(port), reuse(reusable), connections(connections), family(family), socktype(socktype), flags(flags) {}
 
 		~BaseServer();
 

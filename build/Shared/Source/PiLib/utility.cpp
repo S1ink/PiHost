@@ -1,6 +1,10 @@
 #include "headers/utility.h"
 
 namespace pilib {
+    /*dstream::dstream(const std::ostream& type) {
+        this->set_rdbuf(type.rdbuf());
+    }*/
+
 #define OMODE std::_Ios_Openmode
     void lstream::setData(const char* file, OMODE modes) {
         this->file = file;
@@ -37,7 +41,7 @@ namespace pilib {
     }
 
     lstream::lstream(const lstream& other) {
-        std::cout << pilib::dateStamp() << " : Stream object copied. {" << this->is_open() << "}" << newline;
+        //std::cout << pilib::dateStamp() << " : Stream object copied. {" << this->is_open() << "}" << newline;
         file = other.file;
         modes = other.modes;
 
@@ -70,14 +74,14 @@ namespace pilib {
         }
         else {
             char buffer[128];
-            std::string line = "";
+            std::string line;
             while (fgets(buffer, 128, pipe)) {
                 line.append(buffer);
                 if (std::stringstream(line) >> result) {
                     break;
                 }
                 else {
-                    line = "";
+                    line.clear();
                 }
             }
         }
@@ -93,7 +97,7 @@ namespace pilib {
         }
         else {
             char buffer[128];
-            std::string line = "";
+            std::string line;
             bool found = false;
             while (fgets(buffer, 128, pipe)) {
                 out << buffer;
@@ -103,7 +107,7 @@ namespace pilib {
                         found = true;
                     }
                     else {
-                        line = "";
+                        line.clear();
                     }
                 }
             }
@@ -120,14 +124,14 @@ namespace pilib {
         }
         else {
             char buffer[128];
-            std::string line = "";
+            std::string line;
             while (fgets(buffer, 128, pipe)) {
                 line.append(buffer);
                 if (std::stringstream(line) >> result) {
                     break;
                 }
                 else {
-                    line = "";
+                    line.clear();
                 }
             }
         }
@@ -143,7 +147,7 @@ namespace pilib {
         }
         else {
             char buffer[128];
-            std::string line = "";
+            std::string line;
             bool found = false;
             while (fgets(buffer, 128, pipe)) {
                 out << buffer;
@@ -153,7 +157,7 @@ namespace pilib {
                         found = true;
                     }
                     else {
-                        line = "";
+                        line.clear();
                     }
                 }
             }
@@ -162,6 +166,7 @@ namespace pilib {
         return result;
     }
 
+    //add output parser because rsync default is horrendous
     void rsync(std::ostream& output, const char* source, const char* destination, const char* options) {
         std::ostringstream command;
         command << "sudo rsync " << options << space << source << space << destination;

@@ -26,8 +26,7 @@ namespace pilib {
         std::atomic_bool& control, 
         time_t th_uintv, 
         std::vector<std::thread>& threads, 
-        std::map<std::string, 
-        templatefunc>& funcmap
+        std::unordered_map<std::string, templatefunc>& funcmap
     ) {
         std::ifstream reader(filepath);
         std::string linebuffer, numbuff;
