@@ -11,5 +11,11 @@
  - Much of the contained code has been personalized and contains file paths, directories, etc. specific to my machine/network. If you want to try things out you will have to modify and build your own version of the project. In the future I hope to add general-use functionality to override these settings. 
  - With the above in mind, it is not recommended to use the included binaries on your own hardware. The programs have also only been tested (and built on) on a Raspberry Pi 4, and thus the binaries are built for ARM only. If you would like to test things please build your own version. 
  - Items under "resources" (especially csv's) are also personalized to my setup.
+## CLI Args
+ - Although changing the default logging location is still nonconfigurable (without a rebuild), most other settings are supported through CLI args. 
+ - All args follow the format of _**argname=argvalue**_, and are separated from other args by at least one space. 
+Argname | Internal storage type | Description
+"fanpin" | uint | Gpio pin which a pwm fan is being controlled on - see https://abyz.me.uk/rpi/pigpio/cif.html#gpioHardwarePWM for specifications
+"buttonpin" | uint | Gpio pin which contains a button that will be used to control shutdown
 ## Additional Info
  - If you have any suggestions feel free to create an issue or pull request!
