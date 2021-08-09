@@ -16,9 +16,14 @@
  - All args follow the format of _**argname=argvalue**_, and are separated from other args by at least one space. 
 
 _**This chart is not complete**_
-| Argname | Internal storage type | Description |
+| Argname | Internal storage type | Default value | Description |
 |-|-|-|
-| "fanpin" | uint | Gpio pin which a pwm fan is being controlled on - see https://abyz.me.uk/rpi/pigpio/cif.html#gpioHardwarePWM for specifications |
-| "buttonpin" | uint | Gpio pin which contains a button that will be used to control shutdown |
+| "fanpin" | uint | 18 | Gpio pin which a pwm fan is being controlled on - see https://abyz.me.uk/rpi/pigpio/cif.html#gpioHardwarePWM for specifications |
+| "buttonpin" | uint | 3 | Gpio pin for a power button, pin 3 is used by default because it will also wake the pi when it is powered off. |
+| "fanspeed" | float | 40.f | Fan speed in percent. Only a resolution of 4 digits right of the decimal will be used. |
+| "warningtemp" | int | 40 | (Soc) Temperature in degrees celsius above which a the program will log the time, temp, and CPU utilization. |
+| "pollinterval" | long | 10 | The interval which temps will be polled and threads will check if they should exit. A longer interval may mean closing the program could take up to this amount of time to exit. |
+| "tasks" | std::string | NA | The path from which task threads will be generated (currently supports an rsync task, getting APT updates, and running a command). This arg should always be specified as the default value is specific to my machine. |
+| "halt" | bool | true | Weather or not the program will call call a shutdown on exit. This should be specified as 1/0 compared a textual value of "true"/"false". |
 ## Additional Info
  - If you have any suggestions feel free to create an issue or pull request!
