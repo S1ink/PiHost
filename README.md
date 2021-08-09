@@ -24,6 +24,7 @@ _**This chart is not complete**_
 | "warningtemp" | int | 40 | (Soc) Temperature in degrees celsius above which a the program will log the time, temp, and CPU utilization. |
 | "pollinterval" | long | 10 | The interval which temps will be polled and threads will check if they should exit. A longer interval may mean closing the program could take up to this amount of time to exit. |
 | "tasks" | std::string | NA | The path from which task threads will be generated (currently supports an rsync task, getting APT updates, and running a command). This arg should always be specified as the default value is specific to my machine. |
-| "halt" | bool | true | Weather or not the program will call call a shutdown on exit. This should be specified as 1/0 compared a textual value of "true"/"false". |
+| "halt" | bool | true | Weather or not the program will call call a shutdown on exit. This should be specified as 1/0 compared a textual value of "true"/"false". | 
+
 ## Additional Info
  - If you have any suggestions feel free to create an issue or pull request!
