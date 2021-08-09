@@ -52,6 +52,67 @@ namespace pilib {
     }*/
     //lstream::~lstream() {std::cout << pilib::dateStamp() << " : Stream object deleted. {" << this->is_open() << "}" << newline;}
 
+    void Data::extractBool(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<bool*>(this->data));
+    }
+    void Data::extractChar(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<char*>(this->data));
+    }
+    void Data::extractInt(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<int*>(this->data));
+    }
+    void Data::extractUint(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<uint*>(this->data));
+    }    
+    void Data::extractFloat(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<float*>(this->data));
+    }
+    void Data::extractLong(const char* str) {
+        std::istringstream text(str);
+        text >> *(static_cast<long*>(this->data));
+    }
+    void Data::extractStr(const char* str) {
+        *(static_cast<std::string*>(this->data)) = str;
+    }
+
+    void Data::extract(const char* str) {
+        (this->*ext)(str);
+    }
+
+    ArgsHandler& ArgsHandler::get() {
+        static ArgsHandler global;
+        return global;
+    }
+
+    std::unordered_map<std::string, Data>* ArgsHandler::getVars() {
+        return &(this->vars);
+    }
+    void ArgsHandler::insertVars(std::initializer_list< std::pair<const std::string, Data> > list) {
+        this->vars.insert(list);
+    }
+    uint ArgsHandler::parse(int argc, char* argv[]) {
+        uint noid = 0;
+        std::string buffer;
+        for (int i = 1; i < argc; i++) {
+            std::istringstream arg(argv[i]);
+            std::getline(arg, buffer, '=');
+            auto result = this->vars.find(buffer);
+            arg >> buffer;
+            if (result != this->vars.end()) {
+                result->second.extract(buffer.c_str());
+            }
+            else {
+                noid += 1;
+            }
+        }
+        return noid;
+    }
+
     void exec(const char* command, std::ostream& output) {
         FILE* pipe = popen(command, "r");
         if (!pipe) {
@@ -230,6 +291,14 @@ namespace pilib {
 
     void replace(std::string& str, const std::string find, const char* replace) {
         str.replace(str.find(find), find.length(), replace);
+    }
+
+    std::string relpath(const char* filepath) {
+        std::string file(filepath);
+        return file.substr(0, file.find_last_of('/')+1);
+    }
+    std::string relpath(const std::string& filepath) {
+        return filepath.substr(0, filepath.find_last_of('/')+1);
     }
 
     void exitError(const char* message) {

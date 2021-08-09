@@ -41,38 +41,58 @@ static void callback(int gpio, int level, uint32_t tick) {
 void sigIgnore(int signum) {
 	pilib::StopWatch scope;
 	std::string desc = sigmap[signum-1];
-	std::cout << pilib::dateStamp() << " : Signal {" << signum << "} caught [" << desc << "] - ignored";
+	std::cout << pilib::dateStamp() << " : Signal {" << signum << "} caught [" << desc << "] -> ignored\n";
 }
 
 void sigTerminate(int signum) {
 	pilib::StopWatch scope;
 	std::string desc = sigmap[signum-1];
-	std::cout << pilib::dateStamp() << " : Signal {" << signum << "} caught [" << desc << "] - calling exit\n";
+	std::cout << pilib::dateStamp() << " : Signal {" << signum << "} caught [" << desc << "] -> calling exit\n";
 	run = false;
 }
 
+template<typename t>
+void fromString(const char* str, t& item) {
+	std::istringstream stream(str);
+	stream >> item;
+}
+
 int main(int argc, char* argv[]) {
-	//pilib::StopWatch runtime;
+	pilib::StopWatch runtime;
 	//std::thread end(endCondition);
 
 	/*pilib::http::HttpServer server(pilib::http::resources::root, 5, pilib::http::Version::HTTP_1_1);
 	server.serve_beta(run);*/
 	
-	{
-		pilib::StopWatch scope;
-
-		for (uint i = 0; i < int_sigs.size(); i++) {
-			signal(int_sigs[i], sigIgnore);
-		}
-		for (uint i = 0; i < exit_sigs.size(); i++) {
-			signal(exit_sigs[i], sigTerminate);
-		}
+	for (uint i = 0; i < int_sigs.size(); i++) {
+		signal(int_sigs[i], sigIgnore);
+	}
+	for (uint i = 0; i < exit_sigs.size(); i++) {
+		signal(exit_sigs[i], sigTerminate);
 	}
 
-	while (run) {
-		std::cout << "loop run!" << newline;
-		std::this_thread::sleep_for(CHRONO::seconds(5));
+	int integer = 0;
+	float floating_point = 0.f;
+	char character = '\0';
+	bool boolean = false;
+	std::string path;
+
+	std::cout << argv[0] << newline;
+	std::cout << pilib::relpath(argv[0]) << newline;
+
+	if (argc > 1) {
+		pilib::ArgsHandler& args = pilib::ArgsHandler::get();
+		args.insertVars({
+			{"int", &integer},
+			{"float", &floating_point},
+			{"char", &character},
+			{"bool", &boolean},
+			{"path", &path}
+		});
+		args.parse(argc, argv);
 	}
+
+	std::cout << integer << newline << floating_point << newline << character << newline << boolean << newline << path << newline;
 
 	//end.join();
 	//th.join();

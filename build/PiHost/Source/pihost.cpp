@@ -6,7 +6,7 @@
 #define THREADING
 #include "pilib.h"
 
-CE_STR version = "1.3.4";
+CE_STR version = "1.3.5";
 
 //all compatible thread modules must be in the from of ~ typedef void(*templatefunc)(const char*, std::ostream&)
 namespace thmods {
@@ -53,7 +53,6 @@ namespace thmods {
     //add task that cleans up output files 
 }
 
-constexpr time_t update_intv = 10;
 std::atomic_bool run = { true };
 bool halt_on_exit = true;
 pilib::lstream logger("/data/logs/rpi_out.txt", std::ios::app);
@@ -64,13 +63,13 @@ std::unordered_map<std::string, pilib::templatefunc> functions = {
         {"command", thmods::commandRun},
 };
 
-
+//transfer to pilib
 const std::array<std::string, 31> sigmap = {
     "console hangup", "keyboard interrupt", "quit request",
     "illegal CPU instruction", "trace request", "abort",
     "invalid bus address", "floating point arithmetic error, likely div/0",
     "program killed (unblockable)", "custom signal, not from os",
-    "segmentation violation - check for bad '*/&'", "custom signal - not an os error",
+    "segmentation violation, check for bad '*/&'", "custom signal, not from os",
     "broken pipe", "alarm", "request to terminate", "stack fault",
     "child status has changed", "command to continue",
     "program stopped (unblockable)", "keyboard stop", "backround terminal read",
@@ -114,14 +113,35 @@ void sigTerminate(int signum) {
 int main(int argc, char* argv[]) {
     std::vector<std::thread> threads;
 
+    time_t update_intv = 10;
+    uint fan_pin = gpin::pi_fan;
+    uint button_pin = gpin::pi_power;
+    float fan_speed = 40.f;
+    int warn_temp = 40;
+    std::string taskfile_path = locations::external::tasks;
+
+    if (argc > 1) {
+        pilib::ArgsHandler& args = pilib::ArgsHandler::get();
+        args.insertVars({
+            {"fanpin", &fan_pin},
+            {"buttonpin", &button_pin},
+            {"fanspeed", &fan_speed},
+            {"warningtemp", &warn_temp},
+            {"pollinterval", &update_intv},
+            {"tasks", &taskfile_path},
+            {"halt", &halt_on_exit}
+        });
+        args.parse(argc, argv);
+    }
+
     logger.openOutput();
-    logger << pilib::dateStamp() << " : System startup - PiHost version " << version << newline;
+    logger << pilib::dateStamp() << " : Startup - PiHost v." << version << newline;
     logger.close();
 
     gpioInitialise();
-    gpioHardwarePWM(gpin::pi_fan, 25000, 400000);
-    gpioSetMode(gpin::pi_power, PI_INPUT);
-    gpioSetISRFunc(gpin::pi_power, RISING_EDGE, 0, callback);
+    gpioHardwarePWM(fan_pin, 25000, fan_speed*10000);
+    gpioSetMode(button_pin, PI_INPUT);
+    gpioSetISRFunc(button_pin, RISING_EDGE, 0, callback);
 
     for (uint i = 0; i < int_sigs.size(); i++) {
         signal(int_sigs[i], sigIgnore);
@@ -131,18 +151,18 @@ int main(int argc, char* argv[]) {
     }
 
     //add a way to update threads
-    pilib::parseTasks(locations::external::tasks, std::cout, run, update_intv, threads, functions);
+    pilib::parseTasks(taskfile_path.c_str(), std::cout, run, update_intv, threads, functions);
 
     logger.openOutput();
-    logger << pilib::dateStamp() << " : " << threads.size() << " subprocesses started\n";
+    logger << pilib::dateStamp() << " : " << threads.size() << " threads launched\n";
     logger.close();
 
     double temp;
     while (run) {
         temp = pilib::sys::cpuTemp();
-        if (temp >= 40) {
+        if (temp >= warn_temp) {
             logger.openOutput();
-            logger << pilib::dateStamp() << " : High package temp of " << temp << " - {CPU:" << pilib::sys::cpuPercent(CHRONO::seconds(1)) << "%}\n";
+            logger << pilib::dateStamp() << " : High SoC temp of " << temp << "*C - {CPU%:" << pilib::sys::cpuPercent(CHRONO::seconds(1)) << "}\n";
             logger.close();
         }
         std::this_thread::sleep_for(CHRONO::seconds(update_intv));
@@ -168,6 +188,20 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 }
+
+//VARIABLES
+/*
+PATHS:
+ - task file
+ - output
+
+SETTINGS:
+ - polling interval
+ - context {headless/terminal}
+ - warning temp
+ - gpio pins {fan, button}
+
+*/
 
 /*RUNTIME LIST
 * 

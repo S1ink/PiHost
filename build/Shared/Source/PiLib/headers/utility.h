@@ -46,6 +46,49 @@ namespace pilib {
 #undef OMODE
 	};
 
+	//supports bool, char, int, uint, float, str(std)
+	class Data {
+	private:
+		typedef void(Data::* extractor)(const char*);
+
+		void* data;	//smart?
+		extractor ext;
+
+		void extractBool(const char* str);
+		void extractChar(const char* str);
+		void extractInt(const char* str);
+		void extractUint(const char* str);
+		void extractFloat(const char* str);
+		void extractLong(const char* str);
+		void extractStr(const char* str);
+	public:
+		//Data() {}
+		Data(bool* item) : data(item), ext(&Data::extractBool) {}
+		Data(char* item) : data(item), ext(&Data::extractChar) {}
+		Data(int* item) : data(item), ext(&Data::extractInt) {}
+		Data(uint* item) : data(item), ext(&Data::extractUint) {}
+		Data(float* item) : data(item), ext(&Data::extractFloat) {}
+		Data(long* item) : data(item), ext(&Data::extractLong) {}
+		Data(std::string* item) : data(item), ext(&Data::extractStr) {}
+
+		void extract(const char* str);
+	};
+
+	class ArgsHandler {
+	private:
+		ArgsHandler() {}
+		ArgsHandler(const ArgsHandler&) = delete;
+		//~move
+
+		std::unordered_map<std::string, Data> vars;
+	public:
+		static ArgsHandler& get();
+
+		std::unordered_map<std::string, Data>* getVars();
+		void insertVars(std::initializer_list< std::pair<const std::string, Data> > list);
+		uint parse(int argc, char* argv[]);
+	};
+
 	void exec(const char* command, std::ostream& output);
 
 	int aptUpdate();
@@ -62,6 +105,9 @@ namespace pilib {
 	void replace(std::string& str, const std::string find, const char* replace);
 	bool exists(const char* path);
 
+	std::string relpath(const char* filepath);
+	std::string relpath(const std::string& filepath);
+	
 	template<typename input>
 	void debug(input identifier) {
 		std::cout << "DEBUG: " << identifier << newline;
