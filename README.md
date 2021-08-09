@@ -15,6 +15,7 @@
  - Although changing the default logging location is still nonconfigurable (without a rebuild), most other settings are supported through CLI args. 
  - All args follow the format of _**argname=argvalue**_, and are separated from other args by at least one space. 
 
+_**This chart is not complete**_
 | Argname | Internal storage type | Description |
 |-|-|-|
 | "fanpin" | uint | Gpio pin which a pwm fan is being controlled on - see https://abyz.me.uk/rpi/pigpio/cif.html#gpioHardwarePWM for specifications |
