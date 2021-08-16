@@ -204,11 +204,17 @@ namespace pilib {
         };
         Version Versions::getType(const std::string& str) {
             auto search = typemap.find(str);
-            return search->second;
+            if (search != typemap.end()) {
+                return search->second;
+            }
+            return Version::ERROR;
         }
         std::string Versions::getString(Version version) {
             auto search = stringmap.find(version);
-            return search->second;
+            if (search != stringmap.end()) {
+                return search->second;
+            }
+            return std::string();
         }
         const std::unordered_map<std::string, Method> Methods::typemap = {
             {"GET", Method::GET},
@@ -234,11 +240,17 @@ namespace pilib {
         };
         Method Methods::getType(const std::string& str) {
             auto search = typemap.find(str);
-            return search->second;
+            if (search != typemap.end()) {
+                return search->second;
+            }
+            return Method::ERROR;
         }
         std::string Methods::getString(Method method) {
             auto search = stringmap.find(method);
-            return search->second;
+            if (search != stringmap.end()) {
+                return search->second;
+            }
+            return std::string();
         }
         const std::unordered_map<std::string, Code> Codes::typemap = {
             {"100 Continue", Code::CONTINUE}, {"200 OK", Code::OK},
@@ -301,19 +313,28 @@ namespace pilib {
             }
             else {
                 auto search = typemap.find(str);
-                return search->second;
+                if (search != typemap.end()) {
+                    return search->second;
+                }
+                return Code::ERROR;
             }
         }
-        Code Codes::getType(int code) {
+        Code Codes::getType(int code) { //find a way to check param
             return Code(code);
         }
         std::string Codes::getString(Code code) {
             auto search = stringmap.find(code);
-            return search->second;
+            if (search != stringmap.end()) {
+                return search->second;
+            }
+            return std::string();
         }
         std::string Codes::getString(int code) {
             auto search = stringmap.find(Code(code));
-            return search->second;
+            if (search != stringmap.end()) {
+                return search->second;
+            }
+            return std::to_string(code);
         }
 
         Segment::Segment(const std::string& segment) {
@@ -438,10 +459,12 @@ namespace pilib {
             std::getline(rstream, buffer);
             pilib::clearEnd(buffer);
             this->version = Versions::getType(buffer);
-            while (std::getline(rstream, buffer)) {
-                //check for blank line (ex. POST -> deal with the payload)
-                pilib::clearEnd(buffer);
-                this->headers.add(buffer);
+            if ((this->method != Method::ERROR) && (this->version != Version::ERROR)) { //class error var for future reference?
+                while (std::getline(rstream, buffer)) {
+                    //check for blank line (ex. POST -> deal with the payload)
+                    pilib::clearEnd(buffer);
+                    this->headers.add(buffer);  //IMPLEMENT CHECKS!!!
+                }
             }
         }
 
@@ -484,7 +507,7 @@ namespace pilib {
             }
         }
 
-        Response::Response(const std::string& response) {
+        Response::Response(const std::string& response) {   //implement checks when ready to use this form of initialization
             std::istringstream rstream(response);
             std::string buffer;
             std::getline(rstream, buffer, space);
@@ -557,35 +580,43 @@ namespace pilib {
             buffer << endline << body << endline;
         }
 
-        std::string HttpHandler::rPath(const char* item) {
-            std::string temp = root;
+        std::string HttpHandler::find(const char* item) {
+            std::string path = root;
             if (std::string(item) == "/") {
-                temp.append(resources::home);
-                return temp;
+                path.append("/index.html");
             }
-            //check for PiSHARE path here
-            temp.append(item);
-            return temp;
+            //check for special specifier paths here
+            else {
+                path.append(item);
+            }
+            return path;
         }
 
-        void HttpHandler::respond(const int& socket, const std::string& input) {
-            Request req(input);
+        //fix logging -> pass all output to external || create a format struct that can be parsed so that logging can be selective based on outside env (which func)
+        void HttpHandler::respond(const int socket, const std::string& input, const pilib::olstream& out) { 
+            Request req(input); //CHECK FOR VALID HTTP
             HeaderList headers;
             std::ifstream reader;
+            std::string body, path = find((*req.intResource()).c_str());
+
             (this->response.intHeaders())->reset();
-            std::string path = rPath((*req.intResource()).c_str());
-            debug(path);
-            switch (*req.intMethod()) {
-            case Method::GET:
+            std::cout << path << newline;   //continues line from before this func in serve_beta()
+
+            headers.add(   //headers that apply to all
+                (Segment){"Server", "Custom C++ HTTP Server (Raspberry Pi)"}
+            );
+
+            switch (*(req.intMethod())) {
+            case Method::GET:   //requesting resource
             {
-                reader.open(path.c_str(), std::ios::binary);
-                if (reader.is_open()) {
-                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                reader.open(path.c_str(), std::ios::binary);    //attempt to open resource
+                if (reader.is_open()) { //if resource exists
+                    body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
                     headers.add({
                         {"Content-Type", getMegaMimeType(path.c_str())},
                         {"Content-Length", std::to_string(body.length())}
                     });
-                    if (this->version == Version::HTTP_1_0) {
+                    if (this->version == Version::HTTP_1_0) {   //close connection if http 1.0
                         headers.add("Connection", "close");
                     }
                     else {
@@ -593,37 +624,58 @@ namespace pilib {
                     }
                     this->response.update(Code::OK, headers, body);
                 }
-                else {
-                    reader.open(rPath(resources::error_page));
-                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
-                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                else {  //send 404
+                    reader.open(find("/error.html"));
+                    if (reader.is_open()) { //check if error page exists
+                        body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                        pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                        headers.add(
+                            (Segment){"Content-Type", "text/html"}
+                        );
+                    }
+                    else {  //if not send plain text
+                        body = "{Error page not found} - Error: 404 Not Found";
+                        headers.add(
+                            (Segment){ "Content-Type", "text/plain" }
+                        );
+                    }
                     headers.add({
-                        {"Content-Type", "text/html"},
                         {"Content-Length", std::to_string(body.length())},
                         {"Connection", "close"},
                     });
                     this->response.update(Code::NOT_FOUND, headers, body);
+                    
                 }
                 break;
             }
             break;
-            case Method::HEAD:
+            case Method::HEAD:  //requesting header only
             {
-                reader.open(path, std::ios::binary);
-                if (reader.is_open()) {
-                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                reader.open(path, std::ios::binary);    //attempt to open resource
+                if (reader.is_open()) { //if exists
+                    body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
                     headers.add({
                         {"Content-Type", getMegaMimeType(path.c_str())},
                         {"Content-Length", std::to_string(body.length())}
                     });
                     this->response.update(Code::OK, headers);
                 }
-                else {
-                    reader.open(rPath("/error.html"));
-                    std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
-                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                else {  //else send 404
+                    reader.open(find("/error.html"));
+                    if (reader.is_open()) { //check error page exists
+                        body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                        pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_FOUND).c_str());
+                        headers.add(
+                            (Segment){"Content-Type", "text/html"}
+                        );
+                    }
+                    else {  //if not send text
+                        body = "{Error page not found} - Error: 404 Not Found";
+                        headers.add(
+                            (Segment) {"Content-Type", "text/plain"}
+                        );
+                    }
                     headers.add({
-                        {"Content-Type", "text/html"},
                         {"Content-Length", std::to_string(body.length())},
                         {"Connection", "close"},
                     });
@@ -638,27 +690,71 @@ namespace pilib {
             case Method::PATCH:
             case Method::POST:
             case Method::PUT:
-            case Method::TRACE:
+            case Method::TRACE: //methods not supported
             {
-                reader.open(rPath("/error.html"));
-                std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
-                pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::METHOD_NOT_ALLOWED).c_str());
+                reader.open(find("/error.html"));
+                if (reader.is_open()) { //check if page exists
+                    body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::METHOD_NOT_ALLOWED).c_str());
+                    headers.add(
+                        (Segment){"Content-Type", "text/html"}
+                    );
+                }
+                else {  //else send plain text
+                    body = "{Error page not found} - Error: 405 Method Not Allowed";
+                    headers.add(
+                        (Segment){"Content-Type", "text/plain"}
+                    );
+                }   
                 headers.add({
-                    {"Allow", "GET, HEAD"},
-                    {"Content-Type", "text/html"},
+                    {"Allow", "GET, HEAD"}, //only GET and HEAD are suppored
                     {"Content-Length", std::to_string(body.length())},
                     {"Connection", "close"},
                 });
                 this->response.update(Code::METHOD_NOT_ALLOWED, headers, body);
                 break;
             }
-            default:
+            case Method::ERROR: //method is the first thing that is parsed, so an error means that the request was invalid
             {
-                reader.open(rPath("/error.html"));
-                std::string body((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
-                pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_IMPLEMENTED).c_str());
+                reader.open(find("/error.html"));
+                if (reader.is_open()) { //check if page exists
+                    body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::BAD_REQUEST).c_str());
+                    headers.add(
+                        (Segment) {
+                        "Content-Type", "text/html"
+                    }
+                    );
+                }
+                else {  //else send plain text
+                    body = "{Error page not found} - Error: 400 Bad Request";
+                    headers.add(
+                        (Segment) {
+                        "Content-Type", "text/plain"
+                    }
+                    );
+                }
                 headers.add({
-                    {"Content-Type", "text/html"},
+                    {"Content-Length", std::to_string(body.length())},
+                    {"Connection", "close"},
+                    });
+                this->response.update(Code::BAD_REQUEST, headers, body);
+                break;
+            }
+            default:    //defaults to 501 NOT IMPLEMENTED
+            {
+                reader.open(find("/error.html"));
+                if (reader.is_open()) { //check if page exists
+                    body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
+                    pilib::replace(body, "{{code}}", pilib::http::Codes::getString(Code::NOT_IMPLEMENTED).c_str());
+                    headers.add(
+                        (Segment){"Content-Type", "text/html"}
+                    );
+                }
+                else {  //else send plain text
+                    body = "{Error page not found} - Error: 501 Not Implemented";
+                }
+                headers.add({
                     {"Content-Length", std::to_string(body.length())},
                     {"Connection", "close"},
                 });
@@ -666,16 +762,20 @@ namespace pilib {
                 break;
             }
             }
+
             std::string ret = this->response.getSerialized();
             //debug(ret);
             this->sent = send(socket, ret.c_str(), ret.length(), 0);
-            //debug("Send successful - Returning...");
+            std::cout << pilib::dateStamp() << " : Sent {" << this->sent << "} bytes ";
             return;
         }
 
-        HttpServer::HttpServer(const char* root, int max_accepts, Version version) : BaseServer(NULL, "http", max_accepts), handler(root, version), version(version) {
+        Version HttpHandler::getVer() {
+            return this->version;
+        }
+
+        HttpServer::HttpServer(Version version, const char* root, int max_clients) : BaseServer(NULL, "http", max_clients), handler(root, version) {
             getServerAddr();
-            pilib::debug("HttpServer created - got address successfully!");
         }
 
         void HttpServer::prepServer() {
@@ -685,12 +785,12 @@ namespace pilib {
         }
 
         void HttpServer::serve(const std::atomic_bool& rc, std::ostream& out) {
-            switch (this->version) {
+            switch (this->handler.getVer()) {
             case Version::HTTP_1_0:
-                serve1_0(rc, out);
+                s_serve1_0(rc, out);
                 break;
             case Version::HTTP_1_1:
-                serve1_1(rc, out);
+                s_serve1_1(rc, out);
                 break;
             case Version::HTTP_2_0:
             default:
@@ -698,7 +798,8 @@ namespace pilib {
             }
         }
 
-        void HttpServer::serve1_0(const std::atomic_bool& rc, std::ostream& out) {
+        //add timestamps to outputs
+        void HttpServer::s_serve1_0(const std::atomic_bool& rc, std::ostream& out) {
             prepServer();
             int nsock;
             while (rc) {
@@ -723,7 +824,8 @@ namespace pilib {
             close(intSock());
         }
 
-        void HttpServer::serve1_1(const std::atomic_bool& rc, std::ostream& out) {
+        //add timestamps to outputs
+        void HttpServer::s_serve1_1(const std::atomic_bool& rc, std::ostream& out) {
             prepServer();
             int nsock, readlen;
             while (rc) {
@@ -756,8 +858,10 @@ namespace pilib {
             close(intSock());
         }
 
-        void HttpServer::serve_beta(const std::atomic_bool& rc, std::ostream& out) {
+        void HttpServer::serve_beta(const std::atomic_bool& rc) {
             prepServer();
+            pilib::debug("WebServer created sucessfully - starting...\n");
+
             int nsock, readlen, maxfd = intSock();
             char buffer[10000];
             char ipbuff[INET6_ADDRSTRLEN];
@@ -775,7 +879,9 @@ namespace pilib {
                 tbuff = checkup;
                 fdbuff = master;
                 if (select((maxfd + 1), &fdbuff, NULL, NULL, &tbuff) == -1) {
-                    pilib::exitError("Select error");
+                    perror("Select error");
+                    continue;
+                    //filter error and exit if needed
                 }
                 for (int i = 0; i <= maxfd; i++) {
                     if (FD_ISSET(i, &fdbuff)) {
@@ -788,14 +894,14 @@ namespace pilib {
                             if (nsock > maxfd) {
                                 maxfd = nsock;
                             }
-                            pilib::getSockIp(nsock, ipbuff);
-                            out << "Got connection from: " << ipbuff << newline;
+                            getSockIp(nsock, ipbuff);
+                            std::cout << pilib::dateStamp() << " : Got connection from [" << ipbuff << "]\n";
                         }
                         else {
-                            if ((readlen = recv(nsock, buffer, sizeof(buffer), 0)) <= 0) {
+                            if ((readlen = recv(i, buffer, sizeof(buffer), 0)) <= 0) {
                                 if (readlen == 0) {
                                     getSockIp(i, ipbuff);
-                                    out << "Connection ended: " << ipbuff << newline;
+                                    std::cout << pilib::dateStamp() << " : Connection ended [" << ipbuff << "]\n\n";
                                 }
                                 else {
                                     perror("Recv error");
@@ -809,8 +915,9 @@ namespace pilib {
                                 }
                                 else {
                                     getSockIp(i, ipbuff);
-                                    out << "Got request from: " << ipbuff << " {length: " << readlen << "}:" << newline;
+                                    std::cout << pilib::dateStamp() << " : Got request from [" << ipbuff << "] {length: " << readlen << "}: ";
                                     this->handler.respond(i, std::string(buffer));
+                                    std::cout << "to [" << ipbuff << "]\n";
                                     memset(&buffer, 0, sizeof(buffer)); //may need to include this above also
                                 }
                             }

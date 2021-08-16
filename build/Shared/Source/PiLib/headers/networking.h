@@ -6,6 +6,7 @@
 
 #include "utility.h"
 #include "info.h"
+#include "global.h"
 #include "../External/mimetype.h"
 
 namespace pilib {
@@ -14,8 +15,8 @@ namespace pilib {
 
 	class BaseServer {
 	private:
-		addrinfo* list;
-		const char* ip, *port;
+		addrinfo *list;
+		const char *ip, *port;
 		bool reuse;
 		int family, socktype, flags, connections, sockmain;
 	public:
@@ -188,40 +189,36 @@ namespace pilib {
 
 		class HttpHandler {
 		private:
-			/*struct State {
-				int sent;
-				std::string bbuff;
-
-			};*/
-
 			std::string root;
 			Version version;
 			//Request request;
 			Response response;
 			int sent;
-
-			std::string rPath(const char* item);
+			//vars to set default html page names (within root)
+		protected:
+			std::string find(const char* item);
 		public:
-			HttpHandler(const char* root = resources::root, Version version = Version::HTTP_1_1) : root(root), version(version), response(version) /*, request(version)*/ {}
+			HttpHandler(const char* root = resources::root, Version version = Version::HTTP_1_1) : 
+				root(root), version(version), response(version) /*, request(version)*/ {}
 
-			//server
-			void respond(const int& socket, const std::string& input);
-			//client
-			//void request(const std::string& input, std::ostream& output, bool init = false); 
+			void respond(const int socket, const std::string& input, const pilib::olstream& out = &std::cout);	//server
+			//void request(const std::string& input, std::ostream& output, bool init = false);	//client
+
+			Version getVer();
 		};
 
 		class HttpServer : public BaseServer {
 		private:
 			HttpHandler handler;
-			Version version;
+		protected:
 			void prepServer();
 		public:
-			HttpServer(const char* root = resources::root, int max_accepts = 5, Version version = Version::HTTP_1_1);
+			HttpServer(Version version = Version::HTTP_1_1, const char* root = pilib::proot.getDir(), int max_clients = 5);
 
 			void serve(const std::atomic_bool& rc, std::ostream& out = std::cout);
-			void serve1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);
-			void serve1_1(const std::atomic_bool& rc, std::ostream& out = std::cout);
-			void serve_beta(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void s_serve1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void s_serve1_1(const std::atomic_bool& rc, std::ostream& out = std::cout);
+			void serve_beta(const std::atomic_bool& rc);
 		};
 	}
 }

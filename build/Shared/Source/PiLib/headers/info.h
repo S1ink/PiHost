@@ -4,13 +4,15 @@
 #include "include.h"
 #undef INCLUDE_ALL
 
+#include "utility.h"
+
 namespace pilib {
 	class SYS {
 		// all stats here
 	};
 
 	class CPU {
-	private:
+	public:
 		class CoreData {
 		private:
 			enum class States {
@@ -26,65 +28,127 @@ namespace pilib {
 			std::string title;
 			uint data[(uint)States::TOTAL];
 
-			void update();
-			//create option to select line to update from
+			void update();	//updates from main CPU stats
+			//void update(std::istream& file);
+			uint updateFrom(uint core);	//updates from specified core (starting at 1, main is 0), if no core is found, updates from main
+			//uint updateFrom(uint core, std::istream& file);
+			void parseFrom(const std::string& line);
 
-			CoreData(){}
-			CoreData(void*);
+			CoreData() {}
+			CoreData(uint core);
+			CoreData(const std::string& line);
 			CoreData(const CoreData& other);
 
-			uint getIdle();	//return value is in usr_hz -> the amount to time chunks in said state
+			uint getIdle();	//return value is in usr_hz -> the amount of time chunks in said state
 			uint getActive();
 			uint getTotal();
 			uint getState(States state);
+			uint getStates(States states[], size_t size);
 
 			static void readAll(std::vector<CoreData>& lines);
 		};
 
-		uint c_cores;
-		CoreData *cbuff1, *cbuff2;
-	public:
-		//typedef std::pair<std::string, float> Util;
-		typedef std::map<std::string, float> UtilMap;
+		template <size_t cc>
+		using Umap = std::array<float, cc>;
+		typedef std::vector<float> Uvec;
+		typedef std::vector<CoreData> Svec;
 
-		CPU();
-		~CPU();
+		static CPU& get();
 
 		uint count();
-		//static uint count();
-		
+		static uint cCount();
+
+		void update(Svec& container);
+
+		float refPercent();
+		float refPercent(uint core);
+		template<typename rep, typename period>
+		float intervalPercent(CHRONO::duration<rep, period> interval) {
+			this->buffer[0].update();
+			std::this_thread::sleep_for(interval);
+			update(this->reference);
+			return average(this->buffer[0], this->reference[0]);
+		}
+		template<typename rep, typename period>
+		float intervalPercent(uint core, CHRONO::duration<rep, period> interval) {
+			if (core > this->c_cores) {
+				core = 0;
+			}
+			this->buffer[core].update();
+			std::this_thread::sleep_for(interval);
+			update(this->reference);
+			return average(this->buffer[core], this->reference[core]);
+		}
+
+		Uvec fromReference();
+		template<typename rep, typename period>
+		Uvec fromInterval(CHRONO::duration<rep, period> interval) {
+			update(this->buffer);
+			std::this_thread::sleep_for(interval);
+			update(this->reference);
+			return averageVec(this->buffer, this->reference);
+		}
+
+		void average(Svec& first, Svec& second, Uvec& ret);
+		Uvec average(Svec& first, Svec& second);
+
 		static float average(CoreData& first, CoreData& second);
-		static void averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second, UtilMap& out);
-		static UtilMap averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second);
+		static void averageVec(Svec& first, Svec& second, Uvec& ret);
+		static Uvec averageVec(Svec& first, Svec& second);
 
 		static float temp();
+		//static float ctemp();
 
 		template<typename rep, typename period>
 		static float percent(CHRONO::duration<rep, period> interval) {
-			CoreData second, first(nullptr);
+			CoreData second, first(0);
 			std::this_thread::sleep_for(interval);
 			second.update();
 			return average(first, second);
 		}
 		static float percent(int seconds = 1);
+	private:
+		CPU();
+		CPU(const CPU&) = delete;
 
-		template<typename rep, typename period>
-		static UtilMap percentMap(CHRONO::duration<rep, period> interval) {
-			std::vector<CoreData> first, second;
-			CoreData::readAll(first);
-			std::this_thread::sleep_for(interval);
-			CoreData::readAll(second);
-			return averageVec(first, second);
-		}
-		static UtilMap percentMap(int seconds = 1);
-
-		static float searchUtil(const std::string& search, UtilMap& map);
-		//static float searchUtil(const std::string& item);
+		uint c_cores;
+		Svec reference, buffer;
 	};
 
 	class NET {
 	private:
+		class Interface {
+		public:
+			enum class Stats {
+				RBYTES, RPACKETS, RERR, RDROP,
+				RFIFO, FRAME, RCOMPRESSED, MULTICAST,
+				TBYTES, TPACKETS, TERR, TDROP, TFIFO,
+				COLLS, CARRIER, TCOMPRESSED, TOTAL
+			};
+			struct MultiStat {
+				ulong sent, recv;
+			};
 
+			std::string title;
+			std::array<ulong, (uint)Stats::TOTAL> data;
+
+			void update();
+			bool updateFrom(const std::string& id);
+			void parseFrom(const std::string& line);
+
+			Interface();
+			Interface(const std::string& id);
+			Interface(const Interface& other);
+
+			ulong getSent();	//bytes
+			ulong getRecv();
+			MultiStat getBytes();
+			MultiStat getPackets();
+			ulong getStat(Stats stat);
+		private:
+			static const std::array<Stats, 2> s_speeds;	//use a different system if more stats become relevant
+			static const std::array<Stats, 2> s_packets;	
+		};
 	public:
 
 	};
@@ -128,9 +192,6 @@ namespace pilib {
 
 		float cpuPercent(CHRONO::duration<CHRONO::seconds::rep, CHRONO::seconds::period> interval);
 	}
-
-	char* dateStamp();
-	char* dateStamp(time_t* tme);
 }
 
 /* CPU States

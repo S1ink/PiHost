@@ -45,12 +45,15 @@ namespace pilib {
 		enum class Version {
 			HTTP_1_0,
 			HTTP_1_1,
-			HTTP_2_0
+			HTTP_2_0,
+			TOTAL,
+			ERROR
 		};
 		enum class Method {
 			GET, HEAD, POST,
 			PUT, DELETE, TRACE,
-			OPTIONS, CONNECT, PATCH
+			OPTIONS, CONNECT, PATCH,
+			TOTAL, ERROR
 		};
 		//Does not include all possible codes, only ~relevant~ ones -> full list here: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 		enum class Code {
@@ -65,7 +68,7 @@ namespace pilib {
 			INTERNAL_SERVER_ERROR = 500, NOT_IMPLEMENTED = 501,
 			BAD_GATEWAY = 502, SERVICE_UNAVAILABLE = 503, GATEWAY_TIMEOUT = 504,
 			HTTP_VERSION_NOT_SUPPORTED = 505, NOT_EXTENDED = 510,
-			NETWORK_AUTHICATION_REQIRED = 511
+			NETWORK_AUTHICATION_REQIRED = 511, ERROR
 		};
 
 		namespace resources {

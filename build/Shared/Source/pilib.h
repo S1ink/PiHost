@@ -21,6 +21,7 @@
 #define THREADING
 #define NETWORKING
 #define GPIO
+#define GLOBAL
 #endif
 
 #ifdef EXTERNAL
@@ -53,4 +54,8 @@
 
 #ifdef GPIO
 #include "PiLib/headers/gpio.h"
+#endif
+
+#ifdef GLOBAL
+#include "PiLib/headers/global.h"
 #endif

@@ -18,11 +18,76 @@ namespace pilib {
 		}
 		reader.close();
 	}
-	CPU::CoreData::CoreData(void*) {
-		update();
+	/*void CPU::CoreData::update(std::istream& file) {
+		file >> this->title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			file >> this->data[i];
+		}
+	}*/
+	uint CPU::CoreData::updateFrom(uint core) {
+		std::ifstream reader(locations::stats::cpu);
+		std::string buffer;
+		uint j;
+		for (j = 0; j <= core; j++) {
+			std::getline(reader, buffer);
+			if (buffer.compare(0, 3, "cpu")) {
+				reader.seekg(0, std::ios::beg);
+				reader >> this->title;
+				for (uint i = 0; i < (uint)States::TOTAL; i++) {
+					reader >> this->data[i];
+				}
+				reader.close();
+				return 0;
+			}
+		}
+		reader.close();
+		std::istringstream line(buffer);
+		line >> this->title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			line >> this->data[i];
+		}
+		return j;
+	}
+	/*uint CPU::CoreData::updateFrom(uint core, std::istream& file) {
+		std::string buffer;
+		uint j;
+		for (j = 0; j <= core; j++) {
+			std::getline(file, buffer);
+			if (buffer.compare(0, 3, "cpu")) {
+				file.seekg(0, std::ios::beg);
+				file >> this->title;
+				for (uint i = 0; i < (uint)States::TOTAL; i++) {
+					file >> this->data[i];
+				}
+				return 0;
+			}
+		}
+		std::istringstream line(buffer);
+		line >> this->title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			line >> this->data[i];
+		}
+		return j;
+	}*/
+	void CPU::CoreData::parseFrom(const std::string& line) {
+		std::istringstream stream(line);
+		stream >> this->title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			stream >> this->data[i];
+		}
+	}
+
+	CPU::CoreData::CoreData(uint core) {
+		updateFrom(core);
+	}
+	CPU::CoreData::CoreData(const std::string& line) {
+		parseFrom(line);
 	}
 	CPU::CoreData::CoreData(const CoreData& other) {
-		std::cout << "caught you" << newline;
+		this->title = other.title;
+		for (uint i = 0; i < (uint)States::TOTAL; i++) {
+			this->data[i] = other.data[i];
+		}
 	}
 	uint CPU::CoreData::getIdle() {
 		uint ret = 0;
@@ -48,6 +113,13 @@ namespace pilib {
 	uint CPU::CoreData::getState(States state) {
 		return this->data[(uint)state];
 	}
+	uint CPU::CoreData::getStates(States states[], size_t size) {
+		uint ret = 0;
+		for (uint i = 0; i < size; i++) {
+			ret += this->data[(uint)states[i]];
+		}
+		return ret;
+	}
 
 	void CPU::CoreData::readAll(std::vector<CoreData>& lines) {
 		std::ifstream reader(locations::stats::cpu);
@@ -70,82 +142,172 @@ namespace pilib {
 	}
 
 	CPU::CPU() {
+		this->c_cores = cCount();
+		uint size = this->c_cores + 1;
+		this->reference.reserve(size);
+		this->reference.resize(size);
+		this->buffer.reserve(size);
+		this->buffer.resize(size);
+		update(this->reference);
+	}
+
+	CPU& CPU::get() {
+		static CPU global;
+		return global;
+	}
+
+	uint CPU::count() {
+		return this->c_cores;
+	}
+	uint CPU::cCount() {
 		std::ifstream reader(locations::stats::cpu);
 		std::string buffer;
+		uint cores = 0;
 		while (std::getline(reader, buffer)) {
 			if ((!buffer.compare(0, 3, "cpu")) && isdigit(buffer[3])) {
-				this->c_cores += 1;
+				cores += 1;
 			}
 			/*else {
 				break;
 			}*/
 		}
-		reader.close();
-		cbuff1 = new CoreData[this->c_cores];
-		cbuff2 = new CoreData[this->c_cores];
-		std::cout << "pointers inited" << newline;
+		return cores;
 	}
-	CPU::~CPU() {
-		if (cbuff1 != nullptr) {
-			delete[](cbuff1);
+
+	void CPU::update(Svec& container) {
+		std::fstream reader(locations::stats::cpu);
+		std::string buffer;
+		for (uint i = 0; i <= this->c_cores; i++) {
+			std::getline(reader, buffer);
+			if (!buffer.compare(0, 3, "cpu")) {
+				container[i].parseFrom(buffer);
+			}
 		}
-		if (cbuff2 != nullptr) {
-			delete[](cbuff2);
+		reader.close();
+	}
+
+	float CPU::refPercent() {
+		this->buffer[0] = this->reference[0];
+		update(this->reference);
+		return average(this->buffer[0], this->reference[0]);
+	}
+	float CPU::refPercent(uint core) {
+		if (core > this->c_cores) {
+			core = 0;
 		}
+		this->buffer[core] = (CoreData)this->reference[core];
+		update(this->reference);
+		return average(this->buffer[core], this->reference[core]);
+	}
+
+	CPU::Uvec CPU::fromReference() {
+		this->buffer = this->reference;	//move?
+		update(this->reference);
+		return average(this->buffer, this->reference);
+	}
+
+	void CPU::average(Svec& first, Svec& second, Uvec& ret) {
+		float active, total;
+		for (uint i = 0; i <= this->c_cores; i++) {
+			active = (float)(second[i].getActive() - first[i].getActive());
+			total = (float)(second[i].getTotal() - first[i].getTotal());
+			ret.push_back(100.f * active / total);
+		}
+	}
+	CPU::Uvec CPU::average(Svec& first, Svec& second) {
+		Uvec ret;
+		average(first, second, ret);
+		return ret;
 	}
 
 	float CPU::average(CoreData& first, CoreData& second) {
 		float active = (float)(second.getActive() - first.getActive());
 		return active / (active + ((float)(second.getIdle() - first.getIdle())));
 	}
-	void CPU::averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second, UtilMap& out) {
+	void CPU::averageVec(Svec& first, Svec& second, Uvec& ret) {
 		float active, total;
 		for (uint i = 0; i < first.size(); i++) {
 			active = (float)(second[i].getActive() - first[i].getActive());
 			total = (float)(second[i].getTotal() - first[i].getTotal());
-			out.emplace(std::make_pair(first[i].title, (100.f*active/total)));
+			ret.push_back(100.f*active/total);
 		}
 	}
-	CPU::UtilMap CPU::averageVec(std::vector<CoreData>& first, std::vector<CoreData>& second) {
-		UtilMap ret;
-		float active, total;
-		for (uint i = 0; i < first.size(); i++) {
-			active = (float)(second[i].getActive() - first[i].getActive());
-			total = (float)(second[i].getTotal() - first[i].getTotal());
-			ret.emplace(std::make_pair(first[i].title, (100.f*active/total)));
-		}
+	CPU::Uvec CPU::averageVec(Svec& first, Svec& second) {
+		Uvec ret;
+		averageVec(first, second, ret);
 		return ret;
 	}
 
 	float CPU::temp() {
 		float systemp;
+		std::ifstream thermal("/sys/class/thermal/thermal_zone0/temp");
+		thermal >> systemp;
+		thermal.close();
+		return (systemp/1000.f);
+	}
+	/*float CPU::ctemp() {
+		float systemp;
 		FILE* thermal = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
 		fscanf(thermal, "%f", &systemp);
 		fclose(thermal);
 		return (systemp/1000.f);
-	}
+	}*/
 
 	float CPU::percent(int seconds) {
-		CoreData second, first(nullptr);
+		CoreData second, first(0);
 		std::this_thread::sleep_for(CHRONO::seconds(seconds));
 		second.update();
 		return average(first, second);
 	}
 
-	CPU::UtilMap CPU::percentMap(int seconds) {
-		std::vector<CoreData> first, second;
-		CoreData::readAll(first);
-		std::this_thread::sleep_for(CHRONO::seconds(seconds));
-		CoreData::readAll(second);
-		return averageVec(first, second);
+	void NET::Interface::update() {
+		std::ifstream reader(locations::stats::network);
+		std::string buffer;
+		std::streampos start;
+		while (true) {
+			reader >> buffer;
+			if (buffer != "Inter-|" || buffer != "face") {
+				break;
+			}
+			std::getline(reader, buffer);
+			start = reader.tellg();
+		}
+		if (!this->title.empty()) {	//find prexisting interface if exists
+			while (!reader.eof()) {
+				if (buffer == this->title) {
+					for (uint i = 0; i < (uint)Stats::TOTAL; i++) {
+						reader >> this->data[i];
+					}
+					return;
+				}
+				std::getline(reader, buffer);
+				reader >> buffer;
+			}
+		}
+		reader.seekg(start);
+		reader >> buffer;
+		this->title = buffer;	//select first valid interface
+		for (uint i = 0; i < (uint)Stats::TOTAL; i++) {
+			reader >> this->data[i];
+		}
+		ulong iszero;
+		while (!reader.eof()) {	//check for better option
+			reader >> buffer;
+			reader >> iszero;
+			if (((!buffer.compare(0, 3, "eth")) || (!buffer.compare(0, 4, "wlan"))) && iszero > 0) {	//take first option if available
+				this->title = buffer;
+				this->data[0] = iszero;
+				for (uint i = 1; i < (uint)Stats::TOTAL; i++) {
+					reader >> this->data[i];
+				}
+				return;
+			}
+			std::getline(reader, buffer);
+		}
 	}
 
-	float CPU::searchUtil(const std::string& search, UtilMap& map) {
-		auto res = map.find(search);
-		if (res != map.end()) {
-			return res->second;
-		}
-		return 0.f;
+	bool NET::Interface::updateFrom(const std::string& id) {
+
 	}
 
 //old
@@ -242,14 +404,14 @@ namespace pilib {
 		}
 	}
 
-	char* dateStamp() {
+	const char* dateStamp() {
 		time_t now = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
 		char* t = ctime(&now);
 		t[strlen(t) - 1] = '\0';
 		return t;
 	}
 
-	char* dateStamp(time_t* tme) {
+	const char* dateStamp(time_t* tme) {
 		char* t = ctime(tme);
 		t[strlen(t) - 1] = '\0';
 		return t;
