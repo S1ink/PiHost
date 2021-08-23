@@ -1,5 +1,5 @@
-#define INCLUDE_ALL
-#define PILIB_FULL
+#define INCLUDE_STD
+#define VARS
 #include "pilib.h"
 
 CE_STR t_red = "\033[38;2;255;0;0m";
@@ -124,19 +124,15 @@ void visualUtilization(float utilization) {
 //	}
 //}
 
-void olstreamT(const char* text, pilib::olstream out = &std::cout) {
-	out << text;
-}
-
 int main(int argc, char* argv[], char* envp[]) {
 	runtime.setStart();
-	pilib::proot.setDir(argv[0]);
+	pilib::progdir.setDir(argv[0]);
 	//std::thread end(endCondition);
 	
 	atexit(on_exit);
 	pilib::SigHandle::get().setup(sigIgnore, sigTerminate);	//update sighandle
 
-	/*pilib::CPU& cpustat = pilib::CPU::get();	
+	pilib::CPU& cpustat = pilib::CPU::get();	
 	while (1) {
 		std::vector<float> utilization = cpustat.fromReference();
 		visualUtilization(utilization[0]);
@@ -149,7 +145,7 @@ int main(int argc, char* argv[], char* envp[]) {
 		std::cout << "\x1b[5A";
 		std::cout << "                    \n                            \n                            \n                              \n                          \n";
 		std::cout << "\x1b[5A";
-	}*/
+	}
 
 	//std::cout << t_red << "red\n";
 	//std::cout << t_orange << "orange\n";
@@ -157,15 +153,6 @@ int main(int argc, char* argv[], char* envp[]) {
 	//std::cout << t_green << "green\n";
 	//std::cout << t_blue << "blue\n";
 	//std::cout << t_purple << "purple\n" << t_reset;
-
-	pilib::olstream stream("/data/text.txt", std::ios::app);
-	std::ostringstream sstream;
-
-	olstreamT("text", &std::cout);
-	olstreamT("text", "/data/text.txt");
-	olstreamT("text2", stream);
-	olstreamT("stext", &sstream);
-	olstreamT(sstream.str().c_str(), &std::cout);
 
 	//pilib::http::HttpServer server(pilib::http::Version::HTTP_1_1, pilib::proot.getItem("/resources").c_str());
 	//server.serve_beta(run);

@@ -1,11 +1,9 @@
 #pragma once
 
-#define INCLUDE_ALL
-#include "include.h"
-#undef INCLUDE_ALL
+#include "../STD.h"
+#include "../pivar.h"
 
 #include "timing.h"
-#include "utility.h"
 
 namespace pilib {
 	template<typename returntype, typename... args>
@@ -52,18 +50,4 @@ namespace pilib {
 			}
 		}
 	}
-
-	typedef void(*templatefunc)(const char*, std::ostream&);
-
-	struct TaskFile {
-		std::string name;
-		std::string command;
-		std::string output;
-		std::string mode;
-	    DayTime tme;
-	};
-
-	void streamWrapper(const char* message, std::ostream const& output, templatefunc func);
-	void streamWrapper(const char* message, pilib::lstream output, templatefunc func);
-	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::unordered_map<std::string, templatefunc>& funcmap);
 }

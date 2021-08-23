@@ -1,13 +1,10 @@
 #pragma once
 
-#define INCLUDE_ALL
-#include "include.h"
-#undef INCLUDE_ALL
+#include "../STD.h"
+#include "../System.h"
+#include "../Utility.h"
 
-#include "utility.h"
-#include "info.h"
-#include "global.h"
-#include "../External/mimetype.h"
+#include "mimetype.h"
 
 namespace pilib {
 	//network utilities
@@ -201,7 +198,7 @@ namespace pilib {
 			HttpHandler(const char* root = resources::root, Version version = Version::HTTP_1_1) : 
 				root(root), version(version), response(version) /*, request(version)*/ {}
 
-			void respond(const int socket, const std::string& input, const pilib::olstream& out = &std::cout);	//server
+			void respond(const int socket, const std::string& input);	//server
 			//void request(const std::string& input, std::ostream& output, bool init = false);	//client
 
 			Version getVer();
@@ -213,7 +210,7 @@ namespace pilib {
 		protected:
 			void prepServer();
 		public:
-			HttpServer(Version version = Version::HTTP_1_1, const char* root = pilib::proot.getDir(), int max_clients = 5);
+			HttpServer(Version version = Version::HTTP_1_1, const char* root = pilib::progdir.getDir(), int max_clients = 5);
 
 			void serve(const std::atomic_bool& rc, std::ostream& out = std::cout);
 			void s_serve1_0(const std::atomic_bool& rc, std::ostream& out = std::cout);

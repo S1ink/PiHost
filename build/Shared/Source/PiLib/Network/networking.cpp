@@ -1,4 +1,4 @@
-#include "headers/networking.h"
+#include "networking.h"
 
 namespace pilib {
     void getSockIp(int socket, char* ip) {
@@ -593,7 +593,7 @@ namespace pilib {
         }
 
         //fix logging -> pass all output to external || create a format struct that can be parsed so that logging can be selective based on outside env (which func)
-        void HttpHandler::respond(const int socket, const std::string& input, const pilib::olstream& out) { 
+        void HttpHandler::respond(const int socket, const std::string& input) { 
             Request req(input); //CHECK FOR VALID HTTP
             HeaderList headers;
             std::ifstream reader;

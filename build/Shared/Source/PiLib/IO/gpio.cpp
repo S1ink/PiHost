@@ -1,4 +1,4 @@
-#include "headers/gpio.h"
+#include "gpio.h"
 
 namespace pilib{
     int getStatus() {

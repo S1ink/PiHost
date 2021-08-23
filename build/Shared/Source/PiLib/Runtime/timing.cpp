@@ -1,4 +1,4 @@
-#include "headers/timing.h"
+#include "timing.h"
 
 namespace pilib {
     time_t now() {

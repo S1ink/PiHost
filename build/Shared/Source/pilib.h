@@ -2,7 +2,9 @@
 
 //#define PILIB_FULL
 
-#include "PiLib/headers/include.h"
+#ifdef INCLUDE_STD
+#include "PiLib/STD.h"
+#endif
 
 #ifdef LEGACY
 #ifdef PILIB_FULL
@@ -13,49 +15,51 @@
 #endif
 
 #ifdef PILIB_FULL
-#define EXTERNAL
-#define INFO
-#define UTIL
-#define TIMING
-#define FILES
-#define THREADING
-#define NETWORKING
-#define GPIO
-#define GLOBAL
+#define IO
+#define NETWORK
+#define RUNTIME
+#define SYSTEM
+#define UTILITY
+#define VARS
 #endif
 
-#ifdef EXTERNAL
-#include "PiLib/External/mimetype.h"
+#ifndef IO
+#ifndef NETWORK
+#ifndef RUNTIME
+#ifndef SYSTEM
+#ifndef UTILITY
+#define IO
+#define NETWORK
+#define RUNTIME
+#define SYS
+#define UTILITY
+#endif
+#endif
+#endif
+#endif
 #endif
 
-#ifdef INFO
-#include "PiLib/headers/info.h"
+
+#ifdef IO
+#include "PiLib/IO.h"
 #endif
 
-#ifdef UTIL
-#include "PiLib/headers/utility.h"
+#ifdef NETWORK
+#include "PiLib/Network.h"
 #endif
 
-#ifdef TIMING
-#include "PiLib/headers/timing.h"
+#ifdef RUNTIME
+#include "PiLib/Runtime.h"
 #endif
 
-#ifdef FILES
-#include "PiLib/headers/files.h"
+#ifdef SYS
+#include "PiLib/System.h"
 #endif
 
-#ifdef THREADING
-#include "PiLib/headers/threading.h"
+#ifdef UTILITY
+#include "PiLib/Utility.h"
 #endif
 
-#ifdef NETWORKING
-#include "PiLib/headers/networking.h"
-#endif
-
-#ifdef GPIO
-#include "PiLib/headers/gpio.h"
-#endif
-
-#ifdef GLOBAL
-#include "PiLib/headers/global.h"
+#ifdef VARS
+#include "PiLib/pivar.h"
 #endif

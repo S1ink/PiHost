@@ -4,6 +4,14 @@
 #define CHRONO std::chrono
 #define CE_STR constexpr char const*
 
+constexpr char s_dir =
+#ifdef _WIN32
+92;								// ('\')
+#elif __unix__
+47;								// ('/')
+#else
+47;								// ('/')
+#endif
 constexpr char newline = 10;	// ('\n')
 constexpr char space = 32;		// (' ')
 constexpr char csvd = 44;		// (',')
@@ -21,8 +29,7 @@ namespace locations {
 		CE_STR mem = "/proc/meminfo";
 	}
 
-	namespace external {
-
+	namespace external { 
 		CE_STR winbackup = "/data/pihost/resources/rsyncbackup.csv";
 		//CE_STR r_winbackup = "../external/rsyncbackup.csv";
 		CE_STR tasks = "/data/pihost/resources/tasks.csv";

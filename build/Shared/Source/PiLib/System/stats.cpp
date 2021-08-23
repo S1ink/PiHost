@@ -1,4 +1,4 @@
-#include  "headers/info.h"
+#include  "stats.h"
 
 namespace pilib {
 	const std::array<CPU::CoreData::States, 2> CPU::CoreData::s_idle = {
@@ -229,7 +229,7 @@ namespace pilib {
 		for (uint i = 0; i < first.size(); i++) {
 			active = (float)(second[i].getActive() - first[i].getActive());
 			total = (float)(second[i].getTotal() - first[i].getTotal());
-			ret.push_back(100.f*active/total);
+			ret.push_back(100.f * active / total);
 		}
 	}
 	CPU::Uvec CPU::averageVec(Svec& first, Svec& second) {
@@ -243,7 +243,7 @@ namespace pilib {
 		std::ifstream thermal("/sys/class/thermal/thermal_zone0/temp");
 		thermal >> systemp;
 		thermal.close();
-		return (systemp/1000.f);
+		return (systemp / 1000.f);
 	}
 	/*float CPU::ctemp() {
 		float systemp;
@@ -310,8 +310,8 @@ namespace pilib {
 
 	}
 
-//old
-//********************************************************************************************
+	//old
+	//********************************************************************************************
 
 	namespace sys {
 		namespace cpu {
@@ -402,19 +402,6 @@ namespace pilib {
 			float total = active + (static_cast<float>(getIdle(time2) - getIdle(time1)));
 			return 100.f * (active / total);
 		}
-	}
-
-	const char* dateStamp() {
-		time_t now = CHRONO::system_clock::to_time_t(CHRONO::system_clock::now());
-		char* t = ctime(&now);
-		t[strlen(t) - 1] = '\0';
-		return t;
-	}
-
-	const char* dateStamp(time_t* tme) {
-		char* t = ctime(tme);
-		t[strlen(t) - 1] = '\0';
-		return t;
 	}
 }
 

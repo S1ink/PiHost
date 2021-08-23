@@ -1,11 +1,5 @@
 #pragma once
 
-#ifdef INCLUDE_ALL
-#define STD_FULL
-#define LIBS
-#define VARS
-#endif
-
 #ifdef STD_FULL
 #define IO
 #define TIME
@@ -15,15 +9,26 @@
 #define OS
 #endif
 
-#ifdef LIBS
-#include "pigpio.h"
+#ifndef IOS
+#ifndef TIME
+#ifndef TYPE
+#ifndef CONTAINERS
+#ifndef ALGO
+#ifndef OS
+#define IOS
+#define TIME
+#define TYPE
+#define CONTAINERS
+#define ALGO
+#define OS
+#endif
+#endif
+#endif
+#endif
+#endif
 #endif
 
-#ifdef VARS
-#include "pivar.h"
-#endif
-
-#ifdef IO
+#ifdef IOS
 #include <iostream>
 #include <stdio.h>
 #include <cstdio>
@@ -31,18 +36,21 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#undef IO
 #endif
 
 #ifdef TIME
 #include <ctime>
 #include <chrono>
 #include <thread>
+#undef TIME
 #endif
 
 #ifdef TYPE
 #include <memory>
 #include <atomic>
 #include <typeinfo>
+#undef TYPE
 #endif
 
 #ifdef CONTAINERS
@@ -50,12 +58,14 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#undef CONTAINERS
 #endif
 
 #ifdef ALGO
 #include <algorithm>
 #include <regex>
 #include <cstdarg>
+#undef ALGO
 #endif
 
 #ifdef OS
@@ -68,4 +78,5 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#undef OS
 #endif
