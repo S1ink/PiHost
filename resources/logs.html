@@ -15,7 +15,7 @@
         }
 
         div {
-            width: 600px;
+            width: 300px;
             margin: 5em auto;
             padding: 2em;
             background-color: #fdfdff;
@@ -28,7 +28,7 @@
         }
 
         a:link, a:visited {
-            color: #002fff;
+            color: #38488f;
             text-decoration: none;
         }
 
@@ -41,17 +41,24 @@
     </style>
 </head>
 
+<script>
+var x = location.hostname;
+
+
+</script>
+
 <body>
     <div>
-        <h1 class="center">Welcome</h1>
-        <h4 class="center"; style="color:red";>WARNING: This website is currently under heavy construction</h4>
-        <p>
-            This website is running on a custom, from-scratch server software written in C++ and designed for Raspberry Pi
-            <a href="https://www.github.com/S1ink/PiHost/">(GitHub repo here).</a> Note that although I am fairly good at C++, 
-            I do not know HTML that well and thus these webpages look pretty crappy (at least for now).
-        </p>
-        <h3>Additional Pages:</h3>
-        <p><a href="http://rpiserve.ddns.net/logs.html">PiHost Logs</a></p>
+        <h2>Logs</h2>
+        <p><a href="http://rpiserve.ddns.net/logs/rpi_out.txt">pihost main<br></a> 
+        <a href="http://rpiserve.ddns.net/logs/rpi_errors.txt">pihost errors<br></a>
+        <a href="http://rpiserve.ddns.net/logs/apt_log.txt">APT updater<br></a>
+        <a href="http://rpiserve.ddns.net/logs/winsync.txt">windows backups<br></a>
+        <a href="http://rpiserve.ddns.net/logs/Google-files-media.txt">rclone->google main backups<br></a>
+        <a href="http://rpiserve.ddns.net/logs/Mega-files-media.txt">rclone->mega main backups<br></a>
+        <a href="http://rpiserve.ddns.net/logs/Mega-backups.txt">rclone->mega windows backups<br></a>
+        <a href="http://rpiserve.ddns.net/logs/Mega-pihost.txt">rclone->mega pihost project backups<br></a>
+        <a href="http://rpiserve.ddns.net/logs/webserver.txt">webserver output</a></p>
     </div>
 </body>
 </html>

@@ -130,7 +130,7 @@ namespace pilib {
 			std::array<ulong, (uint)Stats::TOTAL> data;
 
 			void update();
-			bool updateFrom(const std::string& id);
+			bool update(const std::string& id);
 			void parseFrom(const std::string& line);
 
 			Interface();

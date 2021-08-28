@@ -260,11 +260,11 @@ namespace pilib {
 		return average(first, second);
 	}
 
-	void NET::Interface::update() {
+	void NET::Interface::update() {	//TODO: modularize the functionality in this function
 		std::ifstream reader(locations::stats::network);
 		std::string buffer;
 		std::streampos start;
-		while (true) {
+		while (true) {	//find where interfaces start
 			reader >> buffer;
 			if (buffer != "Inter-|" || buffer != "face") {
 				break;
@@ -306,7 +306,7 @@ namespace pilib {
 		}
 	}
 
-	bool NET::Interface::updateFrom(const std::string& id) {
+	bool NET::Interface::update(const std::string& id) {
 
 	}
 

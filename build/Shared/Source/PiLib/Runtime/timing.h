@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../STD.h"
+#include "../IO/output.h"
 #include "../pivar.h"
 
 namespace pilib {
@@ -15,7 +16,7 @@ namespace pilib {
 		StopWatch(bool onexit = true, bool now = true);
 		void setStart();
 		double getDuration();
-		void pTotal(std::ostream& output = std::cout);
+		void pTotal(pilib::olstream&& out = &std::cout);
 		~StopWatch();
 	};
 

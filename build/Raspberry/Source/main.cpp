@@ -27,27 +27,6 @@ pilib::StopWatch runtime(false);
 
 //pilib::lstream logger;
 
-void sigIgnore(int signum) {
-	//logger.openOutput();
-	pilib::SigHandle::ignoreBase(signum);
-	//logger.close();
-	return;
-}
-
-void sigTerminate(int signum) {
-	std::cout << t_reset;
-	//logger.openOutput();
-	pilib::SigHandle::terminateBase(signum);
-	//logger.close();
-	//if (signum == 11) {	//check for spam signals
-	//	exit(signum);
-	//}
-	//else {
-	//	run = false;
-	//}
-	exit(signum);
-}
-
 void inline wait(uint seconds) {
 	std::this_thread::sleep_for(CHRONO::seconds(seconds));
 }
@@ -124,15 +103,123 @@ void visualUtilization(float utilization) {
 //	}
 //}
 
+//class M_Base {
+//public:
+//	class C_Base {
+//	protected:
+//		M_Base* env;
+//		
+//		pilib::olstream* getBaseStream() {
+//			return &(this->env->stream);
+//		}
+//	public:
+//		virtual void init(M_Base* outer) {
+//			this->env = outer;
+//		}
+//		virtual void print(const char* message) {
+//			this->env->stream << "C_BASE: " << message << newline;
+//		}
+//	};
+//
+//	M_Base(const pilib::olstream& stream) : stream(stream) {}
+//	M_Base(pilib::olstream&& stream) : stream(stream) {}
+//
+//	virtual void t_print(const char* message) = 0;
+//private:
+//	pilib::olstream stream;
+//};
+//
+//template<typename cont_t = M_Base::C_Base>
+//class M_Test : public M_Base {
+//public:
+//	M_Test(const pilib::olstream& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
+//		this->container = static_cast<const cont_t&>(cont);
+//		this->container.init(this);
+//	}
+//	M_Test(pilib::olstream&& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
+//		this->container = static_cast<const cont_t&>(cont);
+//		this->container.init(this);
+//	}
+//
+//	void t_print(const char* message) override {
+//		this->container.print(message);
+//	}
+//private:
+//	cont_t container;
+//};
+//
+//class C_Test : public M_Base::C_Base {
+//public:
+//	void print(const char* message) override {
+//		this->getBaseStream()->operator<<("C_TEST(!!!!): ") << message << newline;
+//	}
+//};
+//
+//class Random : public M_Base::C_Base {
+//public:
+//	void print(const char* message) override {
+//		this->getBaseStream()->operator<<("Just made this on the fly bro, heres the message - ") << message << newline;
+//	}
+//};
+
+class Custom : public pilib::HttpServer::Formatter {
+public:
+	void onServerStart() override {
+		this->getStream()->operator<<("ON_SERVER_START -> OVERLOADED\n\n");
+	}
+	void onConnect(int fd, const char* ip) override {
+		this->getStream()->operator<<("ON_CONNECT -> OVERLOADED!\n");
+	}
+	void onRequest(int fd, const char* ip, int readlen, pilib::Request* req = nullptr, const char* resource = nullptr) override {
+		this->getStream()->operator<<("ON_REQUEST -> OVERLOADED!\n");
+	}
+	void onResponse(int fd, const char* ip, int sent, pilib::Response* resp = nullptr, const char* resource = nullptr) override {
+		this->getStream()->operator<<("ON_RESPONSE -> OVERLOADED!\n");
+	}
+	void onDisconnect(int fd, const char* ip) override {
+		this->getStream()->operator<<("ON_DISCONNECT -> OVERLOADED!\n\n");
+	}
+	void onServerEnd() override {
+		this->getStream()->operator<<("ON_SERVER_END -> OVERLOADED\n");
+	}
+};
+
+std::string tfinder(std::string&& root, const std::string& item) {
+	std::string path = std::move(root);
+	if ((item == "/") || (item == "/home")) {
+		path.append("/index.html");
+	}
+	else if (!item.compare(0, 6, "/logs/")) {
+		path = "/data" + item;
+	}
+	else if (!item.compare(0, 9, "/PiSHARE/")) {
+		path = item;
+	}
+	else if (!item.compare(0, 6, "/data/")) {
+		path = "/data/pihost" + item.substr(5);
+	}
+	else {
+		path.append(item);
+	}
+	return path;
+}
+
 int main(int argc, char* argv[], char* envp[]) {
 	runtime.setStart();
 	pilib::progdir.setDir(argv[0]);
 	//std::thread end(endCondition);
 	
 	atexit(on_exit);
-	pilib::SigHandle::get().setup(sigIgnore, sigTerminate);	//update sighandle
+	//pilib::sig_handle.setadv();	//update sighandle
+	//pilib::sig_handle.setLog("/data/server.txt");
 
-	pilib::CPU& cpustat = pilib::CPU::get();	
+	pilib::HttpServer server(pilib::olstream(&std::cout), "/data/pihost/resources", tfinder);
+	server.serve();
+
+	//pilib::http::HttpServer server(&std::cout, nullptr, pilib::http::Version::HTTP_1_1, "/data/pihost/resources");
+	//server.serve();
+
+	/*pilib::CPU& cpustat = pilib::CPU::get();	
 	while (1) {
 		std::vector<float> utilization = cpustat.fromReference();
 		visualUtilization(utilization[0]);
@@ -145,7 +232,7 @@ int main(int argc, char* argv[], char* envp[]) {
 		std::cout << "\x1b[5A";
 		std::cout << "                    \n                            \n                            \n                              \n                          \n";
 		std::cout << "\x1b[5A";
-	}
+	}*/
 
 	//std::cout << t_red << "red\n";
 	//std::cout << t_orange << "orange\n";
@@ -153,9 +240,6 @@ int main(int argc, char* argv[], char* envp[]) {
 	//std::cout << t_green << "green\n";
 	//std::cout << t_blue << "blue\n";
 	//std::cout << t_purple << "purple\n" << t_reset;
-
-	//pilib::http::HttpServer server(pilib::http::Version::HTTP_1_1, pilib::proot.getItem("/resources").c_str());
-	//server.serve_beta(run);
 
 	//end.join();
 	return 0;

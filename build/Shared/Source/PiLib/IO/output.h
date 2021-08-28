@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../STD.h"
+#include "../pivar.h"
 
 namespace pilib {
 #define OMODE std::_Ios_Openmode
@@ -12,22 +13,28 @@ namespace pilib {
 		const char* fname;
 		OMODE omodes;
 
-		inline bool checkStream();
-		std::ostream& safeStream();
+		inline bool safeStream();	//changes stored stream variable to be safe
+		std::ostream& streamGuard();	//doesn't change stored stream variable, just returns safe one
 	public:
 		olstream();
 		olstream(const char* file, const OMODE modes = std::ios::out);
+		olstream(const OMODE modes);
 		olstream(std::ostream* stream);
-		olstream(const olstream& other);	//very heavy copy
+		olstream(const olstream& other);
+		olstream(olstream&& other);
 
-		void setStream(const char* file, const OMODE modes = std::ios::out);
+		olstream& operator=(olstream&& other);
+		olstream& operator=(const olstream& other);
+
+		void setModes(const OMODE modes);
+		void addModes(const OMODE modes);
+		void setStream(const char* file);
+		void setStream(const char* file, const OMODE modes);
 		void setStream(std::ostream* stream = &std::cout);
 
-		/*bool open();
-		template<typename t>
-		void fwrite(t item) {
+		std::ostream& getStream();
 
-		}*/
+		//void test();
 
 		template<typename t>
 		olstream& operator<<(t item) {
@@ -37,42 +44,41 @@ namespace pilib {
 				this->file.close();
 			}
 			else {
-				this->safeStream() << item;
+				this->streamGuard() << item;
 			}
 			return *this;
 		}
 
 		//for more efficient file operations
 		template<typename t>
-		olstream& operator<<=(t item) {
+		olstream& operator<<=(t item) {	//opens file and doesn't close 
 			if (this->fmode) {
 				this->file.open(this->fname, ((this->omodes | std::ios::out) & ~std::ios::in));
 				this->file << item;
 			}
 			else {
-				checkStream();
-				*(this->stream) << item;
+				this->streamGuard() << item;
 			}
 			return *this;
 		}
 		template<typename t>
-		olstream& operator<=(t item) {
+		olstream& operator<=(t item) {	//outputs to open file and doesn't close
 			if ((this->fmode) && this->file.is_open()) {
 				this->file << item;
 			}
 			else {
-				*(this->stream) << item;
+				this->streamGuard() << item;
 			}
 			return *this;
 		}
 		template<typename t>
-		olstream& operator<(t item) {
+		olstream& operator<(t item) {	//closes file
 			if (this->fmode && this->file.is_open()) {
 				this->file << item;
 				this->file.close();
 			}
 			else {
-				*(this->stream) << item;
+				this->streamGuard() << item;
 			}
 			return *this;
 		}
@@ -93,10 +99,9 @@ namespace pilib {
 			basic_fstream<char>(file, modes), file(file), modes(modes) {}
 
 		//lstream(std::ostream& stream, const OMODE modes = std::ios::out);	//from basic_ostream
-		//lstream(
 
 		lstream(const lstream& other);	//copy constructor
-		//lstream(lstream&& other);
+		lstream(lstream&& other);
 		//~lstream();
 
 		template<typename ct>

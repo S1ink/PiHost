@@ -3,20 +3,29 @@
 namespace pilib {
 #define OMODE std::_Ios_Openmode
     olstream::olstream() {
+        //std::cout << "Constructed!\n";
         this->fmode = 0;
         this->stream = &std::cout;
     }
     olstream::olstream(const char* file, const OMODE modes) {
+        //std::cout << "Constructed with f-path!\n";
         this->fmode = 1;
         this->fname = file;
         this->omodes = modes;
         this->stream = &std::cout;
     }
+    olstream::olstream(const OMODE modes) {
+        this->fmode = 0;
+        this->omodes = modes;
+        this->stream = &std::cout;
+    }
     olstream::olstream(std::ostream* stream) {
+        //std::cout << "Constructed with stream!\n";
         this->fmode = 0;
         this->stream = stream;
     }
     olstream::olstream(const olstream& other) {
+        //std::cout << "Copied!\n";
         this->fmode = other.fmode;
         this->fname = other.fname;
         this->omodes = other.omodes;
@@ -27,22 +36,69 @@ namespace pilib {
             this->stream = &std::cout;
         }
     }
+    olstream::olstream(olstream&& other) {
+        //std::cout << "Moved!\n";
+        this->fmode = other.fmode;
+        this->stream = other.stream;
+        this->fname = other.fname;
+        this->omodes = other.omodes;
 
-    bool olstream::checkStream() {
+        //other.fmode = 0;
+        other.stream = nullptr;
+        //other.fname = nullptr;
+        //other.omodes = (OMODE)0;
+    }
+
+    olstream& olstream::operator=(olstream&& other) {
+        if (this != &other) {
+            //std::cout << "Assigned!\n";
+            this->fmode = other.fmode;
+            this->stream = other.stream;
+            this->fname = other.fname;
+            this->omodes = other.omodes;
+
+            other.stream = nullptr;
+        }
+        return *this;
+    }
+    olstream& olstream::operator=(const olstream& other) {
+        //std::cout << "Copy Assigned!\n";
+        this->fmode = other.fmode;
+        this->fname = other.fname;
+        this->omodes = other.omodes;
+        if (other.stream != nullptr) {
+            this->stream = other.stream;
+        }
+        else {
+            this->stream = &std::cout;
+        }
+        return *this;
+    }
+
+    bool olstream::safeStream() {
         if (this->stream == nullptr) {
             this->stream = &std::cout;
             return 0;
         }
         return 1;
     }
-
-    std::ostream& olstream::safeStream() {
+    std::ostream& olstream::streamGuard() {
         if (this->stream != nullptr) {
             return *(this->stream);
         }
         return std::cout;
     }
 
+    void olstream::setModes(const OMODE modes) {
+        this->omodes = modes;
+    }
+    void olstream::addModes(const OMODE modes) {
+        this->omodes | modes;
+    }
+    void olstream::setStream(const char* file) {
+        this->fmode = 1;
+        this->fname = file;
+    }
     void olstream::setStream(const char* file, const OMODE modes) {
         this->fmode = 1;
         this->fname = file;
@@ -51,6 +107,24 @@ namespace pilib {
     void olstream::setStream(std::ostream* stream) {
         this->fmode = 0;
         this->stream = stream;
+    }
+
+    std::ostream& olstream::getStream() {
+        return streamGuard();
+    }
+
+    /*void olstream::test() {
+        std::cout << '\t' << fmode << newline;
+        std::cout << '\t' << (bool)file << newline;;
+        std::cout << '\t' << stream << newline;
+        std::cout << '\t' << fname << newline;
+        std::cout << '\t' << omodes << newline;
+    }*/
+
+    lstream::lstream(lstream&& other) {
+        //somehow move parent class instance?
+        this->file = other.file;
+        this->modes = other.modes;
     }
 
     void lstream::setFile(const char* file, OMODE modes) {
