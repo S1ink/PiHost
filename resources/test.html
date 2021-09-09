@@ -1,20 +1,52 @@
 <!DOCTYPE html>
 <html>
-    <title>PiHost WebServer</title>
-<body>
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="This is the description">
+        <title>PiHost WebServer</title>
 
-<p>Click the button to display the hostname of the current URL.</p>
+    </head>
 
-<button onclick="myFunction()">Try it</button>
+    <body>
+        <header>
+            <nav>
 
-<p id="demo"></p>
+            </nav>
+            <h1>Title</h1>
+        </header>
+        <main>
+            <h2>Article</h2>
+            <article>
+                <p>Article text</p>
+                <a style="color:blue"; href="https://www.google.com"; target="_blank_">Google</a>
+            </article>
+            <iframe width="1280" height="720" src="https://www.youtube.com/embed/pQN-pnXPaVg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-<script>
-function myFunction() {
-  var x = location.hostname;
-  document.getElementById("demo").innerHTML= x;
-}
-</script>
+            <ul>
+                <li>item</li>
+                <li>item</li>
+                <li>item</li>
+            </ul>
+            <ol type="i">
+                <li>item</li>
+                <li>item</li>
+                <li>item</li>
+            </ol>
+            <table >
+                <caption>Table</caption>
+                <tr>
+                    <th>num</th>
+                    <th>num</th>
+                </tr>
+                <tr>
+                    <td>one</td>
+                    <td>two</td>
+                </tr>
+            </table>
 
-</body>
+        </main>
+        <footer>
+            <p>footer</p>
+        </footer>
+    </body>
 </html>
