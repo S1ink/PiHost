@@ -104,89 +104,89 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <TargetExt>.arml</TargetExt>
-    <RemoteIntRelDir>$(RemoteProjectRelDir)$(ProjectName)/obj/$(Configuration)</RemoteIntRelDir>
+    <RemoteIntRelDir>/build/$(Configuration)/obj/$(ConfigurationType)</RemoteIntRelDir>
     <RemoteOutRelDir>/build/$(Configuration)</RemoteOutRelDir>
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);</AdditionalSourcesToCopyMapping>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>

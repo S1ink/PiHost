@@ -88,7 +88,6 @@ namespace pilib {
 
 
 
-
 	//template to pass to superclasses?
 	class lstream : public std::basic_fstream<char> {
 	private:

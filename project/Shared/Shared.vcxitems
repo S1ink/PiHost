@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{924e54eb-d800-47a3-ac66-ecc661ead86c}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\output.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\parsing.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\http.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\mimetype.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\gpio.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\networking.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\server.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Runtime\timing.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\System\sighandle.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\System\stats.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\System\syscom.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Utility\basic.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\Utility\program.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\pilib.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\http.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\server.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Utility\basic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\output.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\parsing.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\pivar.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\STD.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Utility.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\IO.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\gpio.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Network.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\mimetype.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Network\networking.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Runtime.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Runtime\threading.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Runtime\timing.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System\sighandle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System\stats.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System\syscom.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\Utility\program.h" />
+  </ItemGroup>
+</Project>

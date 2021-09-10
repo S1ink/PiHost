@@ -4,7 +4,7 @@
 
 CE_STR logs = "/data/logs/webserver.txt";
 
-pilib::StopWatch runtime("Runtime", &std::cout /*pilib::olstream(logs, std::ios::app)*/, 0);
+pilib::StopWatch runtime("Runtime", pilib::olstream(logs, std::ios::app), 0);
 
 void on_exit() {
 	runtime.end();
@@ -85,11 +85,11 @@ std::string resourceMap(std::string&& root, const std::string& item) {
 int main(int argc, char* argv[]) {
 	runtime.setStart();
 	pilib::progdir.setDir(argv[0]);
-	//pilib::sig_handle.setLog(logs);
+	pilib::sig_handle.setLog(logs);
 
 	atexit(on_exit);
 
-	pilib::HttpServer2<ClientID> server(pilib::olstream(&std::cout, logs), "/data/pihost/resources", resourceMap);
+	pilib::HttpServer2<ClientID> server(logs, "/data/pihost/resources", resourceMap);
 	server.serve();
 
 	return 0;

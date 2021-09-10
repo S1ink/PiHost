@@ -1,9 +1,5 @@
-#define INCLUDE_ALL
-#define INFO
-#define UTIL
-#define TIMING
-#define FILES
-#define THREADING
+#define INCLUDE_STD
+#define VARS
 #include "pilib.h"
 
 CE_STR version = "1.3.6";
@@ -12,7 +8,7 @@ CE_STR version = "1.3.6";
 namespace thmods {
     void aptRun(const char* message, std::ostream& output) {
         const char* sep = "*******************************************************************";
-        pilib::StopWatch ptime(false);
+        pilib::StopWatch ptime("Total elapsed time", &output, 0);
         output << sep << "\nPihost internal APT updater initialized. (" << pilib::dateStamp() << ")\n" << sep;
 
         output << "\n\nUpdating Repos:\n" << sep << newline;
@@ -26,28 +22,28 @@ namespace thmods {
         output << "Finished cleaning.\n\n"
             << sep << "\nProcess finished at: " << pilib::dateStamp() 
             << "\nUpdates: " << updates << "\nUpgrades: " << upgrades << newline;
-        ptime.pTotal(output);
+        ptime.end();
     }
 
     void winBackup(const char* message, std::ostream& output) {
         const char* sep = "*****************************************************************";
-        pilib::StopWatch ptime(false);
+        pilib::StopWatch ptime("Total elapsed time", &output, 0);
         output << sep << "\nPihost internal WinBackup initialized. (" << pilib::dateStamp() << ")\n" << sep << newline << newline;
 
         pilib::winSync(locations::external::winbackup, output);
 
         output << sep << "\nProcess finished at: " << pilib::dateStamp() << newline;
-        ptime.pTotal(output);
+        ptime.end();
     }
 
     void commandRun(const char* message, std::ostream& output) {
-        pilib::StopWatch ptime;
+        pilib::StopWatch ptime("Total elapsed time", &output, 0);
         output << "Pihost internal command runner initialized. (" << pilib::dateStamp() << ")\n\n";
 
         pilib::exec(message, output);
 
         output << newline << "Process finished at: " << pilib::dateStamp() << newline;
-        ptime.pTotal(output);
+        ptime.end();
     }
 
     //add task that cleans up output files 
@@ -57,7 +53,7 @@ std::atomic_bool run = { true };
 bool halt_on_exit = true;
 pilib::lstream logger("/data/logs/rpi_out.txt", std::ios::app);
 
-std::unordered_map<std::string, pilib::templatefunc> functions = {
+std::unordered_map<std::string, pilib::TaskFunc> functions = {
         {"apt", thmods::aptRun},
         {"winbackup", thmods::winBackup},
         {"command", thmods::commandRun},
