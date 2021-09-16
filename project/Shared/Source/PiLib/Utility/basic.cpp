@@ -57,7 +57,7 @@ namespace pilib {
         return t;
     }
 
-    std::string withTime(const char* message) {
+    const std::string withTime(const char* message) {
         std::string ret(pilib::dateStamp());
         ret.reserve(strlen(message) + 4);
         ret.append(" : ");

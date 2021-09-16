@@ -87,6 +87,20 @@ namespace pilib {
         return this->fname;
     }
 
+    std::ostream& olstream::open() {
+        if (this->fname) {
+            if (this->file.is_open()) {
+                return this->file;
+            }
+            this->file.open(this->fname);
+            return this->file;
+        }
+        return streamGuard();
+    }
+    void olstream::close() {
+        this->file.close();
+    }
+
     /*void olstream::test() {
         std::cout << '\t' << fmode << newline;
         std::cout << '\t' << (bool)file << newline;;

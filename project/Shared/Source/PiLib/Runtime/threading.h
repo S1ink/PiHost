@@ -7,7 +7,7 @@
 
 namespace pilib {
 	template<typename returntype, typename... args>
-	void routineThread(std::atomic_bool const& control, const DayTime tme, const time_t uintv, returntype(*func)(args...), args... arg) {
+	void routineThread(const std::atomic_bool& control, const DayTime tme, const time_t uintv, returntype(*func)(args...), args... arg) {
 		std::atomic_bool& con = const_cast<std::atomic_bool&>(control);
 		while (con) {
 			while (uintv < d_untilNext(tme)) {
@@ -23,7 +23,26 @@ namespace pilib {
 			}
 		}
 	}
+	template<typename returntype, typename... args>
+	void p_routineThread(std::atomic_bool** control, const DayTime tme, const time_t uintv, returntype(*func)(args...), args... arg) {
+		while (**control) {
+			while (uintv < d_untilNext(tme)) {
+				if (!**control) {
+					break;
+				}
+				std::this_thread::sleep_for(CHRONO::seconds(uintv));
+			}
+			if (**control) {
+				std::this_thread::sleep_until(d_nextTime(tme));
+				func(arg...);
+				std::this_thread::sleep_for(CHRONO::seconds(1));
+			}
+		}
+	}
 
+	// >> another version of the above but with CHRONO time implemented <<
+
+	//this function starts the interval to wait after the desired func finishes, so routines will be altered by however long the function takes
 	template<typename d_rep, typename d_period, typename returntype, typename... args>
 	void loopingThread(std::atomic_bool const& control, CHRONO::duration<d_rep, d_period> interval, CHRONO::duration<d_rep, d_period> uinterval, returntype(*func)(args...), args... arg) {
 		std::atomic_bool& con = const_cast<std::atomic_bool&>(control);

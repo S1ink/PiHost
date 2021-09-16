@@ -13,7 +13,7 @@ namespace pilib {
 	bool exists(const char* path);
 	bool exists(const std::string& path);
 
-	std::string withTime(const char* message);
+	const std::string withTime(const char* message);
 
 	const char* dateStamp();
 	const char* dateStamp(time_t* tme);

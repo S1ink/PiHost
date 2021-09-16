@@ -18,6 +18,11 @@ namespace pilib {
             this->setStart();
         }
     }
+    StopWatch::StopWatch(const char* scope, const olstream& out, uint8_t settings) : settings(settings), output(out), scope("Elapsed time") {
+        if (settings & this->NOW) {
+            this->setStart();
+        }
+    }
     StopWatch::StopWatch(const char* scope, olstream&& out, uint8_t settings) : settings(settings), output(std::move(out)), scope(scope) {
         if (settings & this->NOW) {
             this->setStart();

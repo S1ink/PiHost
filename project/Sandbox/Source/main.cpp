@@ -162,43 +162,38 @@ void visualUtilization(float utilization) {
 //	}
 //};
 
-class Moveable {
-private:
-	class Data {
-	private:
-		std::string text;
-	public:
-		Data() = default;
-		Data(const std::string& text) : text(text) {}
-		Data(std::string&& text) : text(std::move(text)) {}
-		Data(const Data& other) : text(other.text) {
-			std::cout << "'Data' datatype copied\n";
-		}
-		Data(Data&& other) : text(std::move(other.text)) {
-			std::cout << "'Data' datatype moved\n";
-		}
+std::atomic_bool thr = { true };
 
-		void print() {
-			std::cout << this->text << newline;
-		}
-	};
+void inner1(const pilib::olstream& out) {
+	pilib::olstream output(out);
+	//std::cout << std::this_thread::get_id() << newline;
 
-	Data data;
-public:
-	Moveable() = default;
-	Moveable(const std::string& text) : data(text) {}
-	Moveable(std::string&& text) : data(std::move(text)) {}
-	Moveable(const Moveable& other) : data(other.data) {
-		std::cout << "'Moveable' datatype copied\n";
-	}
-	Moveable(Moveable&& other) : data(std::move(other.data)) {
-		std::cout << "'Moveable' datatype moved\n";
+	//std::this_thread::sleep_for(CHRONO::seconds(1));
+	output.operator<<(pilib::withTime("INNER1- 1 second has passed\n"));
+}
+void inner2(const pilib::olstream& out) {
+	pilib::olstream output(out);
+	//std::cout << std::this_thread::get_id() << newline;
+
+	//std::this_thread::sleep_for(CHRONO::seconds(3));
+	output << pilib::withTime("INNER2- 3 seconds have passed\n");
+}
+
+void outer1(pilib::olstream&& out) {
+	pilib::olstream output(std::move(out));
+	//std::cout << std::this_thread::get_id() << newline;
+
+	std::thread one(pilib::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, const pilib::olstream&>, std::ref(thr), CHRONO::seconds(1), CHRONO::seconds(10), inner1, output);
+	std::thread two(pilib::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, const pilib::olstream&>, std::ref(thr), CHRONO::seconds(3), CHRONO::seconds(10), inner2, output);
+
+	while (thr) {
+		std::this_thread::sleep_for(CHRONO::seconds(5));
+		output << pilib::withTime("OUTER1- 5 seconds have passed\n");
 	}
 
-	void print() {
-		data.print();
-	}
-};
+	one.join();
+	two.join();
+}
 
 int main(int argc, char* argv[], char* envp[]) {
 	runtime.setStart();
@@ -209,9 +204,12 @@ int main(int argc, char* argv[], char* envp[]) {
 	//pilib::sig_handle.setadv();	//update sighandle
 	//pilib::sig_handle.setLog("/data/server.txt");
 
-	std::string test("this is a valid string\n");
-	std::cout << test;
-	std::string error(nullptr);
+	std::thread main(outer1, &std::cout);
+	
+	std::this_thread::sleep_for(CHRONO::seconds(30));
+	thr = false;
+
+	main.join();
 
 	//pilib::http::HttpServer server(&std::cout, nullptr, pilib::http::Version::HTTP_1_1, "/data/pihost/resources");
 	//server.serve();

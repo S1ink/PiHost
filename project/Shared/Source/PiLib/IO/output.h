@@ -3,6 +3,7 @@
 #include "../STD.h"
 #include "../pivar.h"
 
+// >> MAKE THIS CLASS THREAD-SAFE << 
 namespace pilib {
 #define OMODE std::ios::openmode
 	class olstream {
@@ -35,6 +36,9 @@ namespace pilib {
 
 		std::ostream& getStream();
 		const char* getPath();
+
+		std::ostream& open();
+		void close();
 
 		//void test();
 

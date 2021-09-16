@@ -20,6 +20,7 @@ namespace pilib {
 		static const uint8_t NOW = 1;
 
 		StopWatch(olstream&& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
+		StopWatch(const char* scope, const olstream& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
 		StopWatch(const char* scope, olstream&& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
 		~StopWatch();
 

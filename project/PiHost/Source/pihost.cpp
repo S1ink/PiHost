@@ -2,184 +2,154 @@
 #define VARS
 #include "pilib.h"
 
+#include "tasks.h"
+
 CE_STR version = "1.3.6";
 
 //all compatible thread modules must be in the from of ~ typedef void(*templatefunc)(const char*, std::ostream&)
 namespace thmods {
-    void aptRun(const char* message, std::ostream& output) {
+    void aptRun(const char* message, const pilib::olstream& logs) {
+        pilib::olstream out(logs);
         const char* sep = "*******************************************************************";
-        pilib::StopWatch ptime("Total elapsed time", &output, 0);
-        output << sep << "\nPihost internal APT updater initialized. (" << pilib::dateStamp() << ")\n" << sep;
+        pilib::StopWatch ptime("Total elapsed time", logs, 0);
+        ((((out <<= sep) <= "\nPihost internal APT updater initialized. (") <= pilib::dateStamp()) <= ")\n") <= sep;
 
-        output << "\n\nUpdating Repos:\n" << sep << newline;
-        int updates = pilib::aptUpdate(output);
+        ((out <= "\n\nUpdating Repos:\n") <= sep) <= newline;
+        int updates = pilib::aptUpdate(out.open());
 
-        output << "\nUpgrading:\n" << sep << newline;
-        int upgrades = pilib::aptUpgrade(output);
+        out <= "\nUpgrading:\n" <= sep <= newline;
+        int upgrades = pilib::aptUpgrade(out.open());
 
-        output << "\nCleaning... ";
+        out <= "\nCleaning... ";
         system("sudo apt clean");
-        output << "Finished cleaning.\n\n"
-            << sep << "\nProcess finished at: " << pilib::dateStamp() 
-            << "\nUpdates: " << updates << "\nUpgrades: " << upgrades << newline;
+        out <= "Finished cleaning.\n\n"
+            <= sep <= "\nProcess finished at: " <= pilib::dateStamp() 
+            <= "\nUpdates: " <= updates <= "\nUpgrades: " <= upgrades < newline;
         ptime.end();
     }
 
-    void winBackup(const char* message, std::ostream& output) {
+    void winBackup(const char* message, const pilib::olstream& logs) {
+        pilib::olstream out(logs);
         const char* sep = "*****************************************************************";
-        pilib::StopWatch ptime("Total elapsed time", &output, 0);
-        output << sep << "\nPihost internal WinBackup initialized. (" << pilib::dateStamp() << ")\n" << sep << newline << newline;
+        pilib::StopWatch ptime("Total elapsed time", logs, 0);
+        (((((out <<= sep) <= "\nPihost internal WinBackup initialized. (") <= pilib::dateStamp()) <= ")\n") <= sep) <= "\n\n";
 
-        pilib::winSync(locations::external::winbackup, output);
+        pilib::winSync(locations::external::winbackup, out.open());
 
-        output << sep << "\nProcess finished at: " << pilib::dateStamp() << newline;
+        out <= sep <= "\nProcess finished at: " <= pilib::dateStamp() < newline;
         ptime.end();
     }
-
-    void commandRun(const char* message, std::ostream& output) {
-        pilib::StopWatch ptime("Total elapsed time", &output, 0);
-        output << "Pihost internal command runner initialized. (" << pilib::dateStamp() << ")\n\n";
-
-        pilib::exec(message, output);
-
-        output << newline << "Process finished at: " << pilib::dateStamp() << newline;
-        ptime.end();
-    }
-
-    //add task that cleans up output files 
 }
 
 std::atomic_bool run = { true };
 bool halt_on_exit = true;
-pilib::lstream logger("/data/logs/rpi_out.txt", std::ios::app);
+pilib::olstream m_out;
 
-std::unordered_map<std::string, pilib::TaskFunc> functions = {
-        {"apt", thmods::aptRun},
-        {"winbackup", thmods::winBackup},
-        {"command", thmods::commandRun},
-};
-
+#ifndef TESTING
 void callback(int gpio, int level, uint32_t tick) {
     if (run != false) {
-        logger.openOutput();
-        logger << pilib::dateStamp() << " : Button pressed - initiating exit\n";
-        logger.close();
+        m_out << pilib::withTime("Button pressed - initiating exit\n");
         run = false;
     }
 }
+#endif
 
-void sigIgnore(int signum) {
-    logger.openOutput();
-    pilib::SigHandle::ignoreBase(signum, logger);
-    logger.close();
-}
-
-void sigTerminate(int signum) {
-    logger.openOutput();
-    pilib::SigHandle::terminateBase(signum, logger);
-    logger.close();
+void sigShutdown(int signum) {
+    pilib::SigHandle::printExit(signum);
     run = false;
     halt_on_exit = false;
 }
 
 //add argument support for paths and intervals
 int main(int argc, char* argv[]) {
-    std::vector<std::thread> threads;
+    pilib::progdir.setDir(argv[0]);
 
     time_t update_intv = 10;
+#ifndef TESTING
     uint fan_pin = gpin::pi_fan;
     uint button_pin = gpin::pi_power;
     float fan_speed = 40.f;
+#endif
     int warn_temp = 40;
-    std::string taskfile_path = locations::external::tasks;
+#ifndef TESTING
+    std::string main_output(std::move(pilib::progdir.getDirSlash() + "pihost.txt"));
+#endif
+    std::string taskfile_path(std::move(pilib::progdir.getDirSlash() + "tasks.csv"));
 
     if (argc > 1) {
         pilib::ArgsHandler& args = pilib::ArgsHandler::get();
         args.insertVars({
+#ifndef TESTING
             {"fanpin", &fan_pin},
             {"buttonpin", &button_pin},
             {"fanspeed", &fan_speed},
+#endif
             {"warningtemp", &warn_temp},
             {"pollinterval", &update_intv},
+#ifndef TESTING
+            {"output", &main_output},
+#endif
             {"tasks", &taskfile_path},
             {"halt", &halt_on_exit}
         });
         args.parse(argc, argv);
     }
 
-    logger.openOutput();
-    logger << pilib::dateStamp() << " : Startup - PiHost v." << version << newline;
-    logger.close();
+#ifndef TESTING 
+    m_out.setStream(main_output.c_str(), std::ios::app);
+#endif
 
+    (((m_out <<= pilib::dateStamp()) <= " : Startup - PiHost v.") <= version) < newline;
+
+#ifndef TESTING
     gpioInitialise();
     gpioHardwarePWM(fan_pin, 25000, fan_speed*10000);
     gpioSetMode(button_pin, PI_INPUT);
     gpioSetISRFunc(button_pin, RISING_EDGE, 0, callback);
+#endif
 
-    pilib::SigHandle::get().setup(sigIgnore, sigTerminate);
+    pilib::sig_handle.setLog(m_out);
+    pilib::sig_handle.setup(sigShutdown);
 
-    //add a way to update threads
-    pilib::parseTasks(taskfile_path.c_str(), std::cout, run, update_intv, threads, functions);
+    TaskManager tasks(
+        std::move(taskfile_path),
+        run,
+        { {"apt", thmods::aptRun}, {"winbackup", thmods::winBackup}, },
+        m_out,
+        update_intv
+    );
+    tasks.launch();
 
-    logger.openOutput();
-    logger << pilib::dateStamp() << " : " << threads.size() << " threads launched\n";
-    logger.close();
+    std::this_thread::sleep_for(CHRONO::seconds(1));
+    (((m_out <<= pilib::dateStamp()) <= " : ") <= tasks.getThreads()) < " task threads started\n";
 
+    //TODO: PID loop
     double temp;
     while (run) {
         temp = pilib::sys::cpuTemp();
         if (temp >= warn_temp) {
-            logger.openOutput();
-            logger << pilib::dateStamp() << " : High SoC temp of " << temp << "*C - {CPU%:" << pilib::sys::cpuPercent(CHRONO::seconds(1)) << "}\n";
-            logger.close();
+            (((((m_out <<= pilib::dateStamp()) <= " : High SoC temp of ") <= temp) <= "*C - {CPU%:") <= pilib::sys::cpuPercent(CHRONO::seconds(1))) < "}\n";
         }
         std::this_thread::sleep_for(CHRONO::seconds(update_intv));
     }
 
-    unsigned int i;
-    for (i = 0; i < threads.size(); i++) {
-        threads[i].join();
-    }
+    tasks.end();
+#ifndef TESTING
     gpioTerminate();
+#endif
 
-    logger.openOutput();
-    logger << pilib::dateStamp() << " : " << i << " thread(s) closed - exitting now\n";    
+    (m_out <<= pilib::dateStamp()) <= " : All thread(s) closed - exitting now\n";   
+#ifndef TESTING
     if (halt_on_exit) {
-        logger << pilib::dateStamp() << " : Program set to halt on exit - calling shutdown\n\n";
-        logger.close();
+        m_out <= pilib::dateStamp() < " : Program set to halt on exit - calling shutdown\n\n";
         system("sudo halt");    //"sudo shutdown -h now"
         return 0;
     }
     else {
-        logger << newline; 
-        logger.close();
+        m_out < newline; 
         return 0;
     }
+#else
+    return 0;
+#endif
 }
-
-//VARIABLES
-/*
-PATHS:
- - task file
- - output
-
-SETTINGS:
- - polling interval
- - context {headless/terminal}
- - warning temp
- - gpio pins {fan, button}
-
-*/
-
-/*RUNTIME LIST
-* 
-* ~~~ handle args -> set vars ~~~
-* startup message
-* init gpio, set fan, set shutdown
-* set sighandlers
-* create task threads -> bound to "run" bool
-* start temp monitering loop
-* ~wait for callback -> sighandler?
-* end gpio, log shutdown
-* call shutdown
-*/

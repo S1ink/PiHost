@@ -174,11 +174,15 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="Source\pihost.cpp" />
+    <ClCompile Include="Source\tasks.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Update="Z:\Files\Code\C\RPI\Shared\Source\PiLib\External\mimetype.c">
       <FileType>CppCode</FileType>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\tasks.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <ClCompile>

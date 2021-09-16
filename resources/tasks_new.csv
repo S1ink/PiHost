@@ -1,0 +1,4 @@
+name,output,write,hr,min,sec,args
+apt,/data/logs/apt_log.txt,overwrite,0,0,0
+winbackup,/data/logs/winsync.txt,overwrite,16,0,0
+command,/data/logs/ls.txt,overwrite,12,0,0,ls -l
