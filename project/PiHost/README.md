@@ -27,7 +27,7 @@
 | "warningtemp" | int | 40 | (Soc) Temperature in degrees celsius above which the program will log the time, temp, and CPU utilization. |
 | "pollinterval" | long | 10 | The interval in seconds at which temps will be polled and threads will check if a shutdown has been initialized. Longer intervals mean less processing time but also less responsiveness to events. |
 | "output" | std::string | WKDIR/pihost.txt | A file to which pihost outputs all verbosity (WKDIR = working directory, or the folder which the program is run within) |
-| "tasks" | std::string | WKDIR/taskst.csv | The path to a task file (.csv) from which task threads will be generated (see section below for more info). This arg should always be specified as the default value is specific to my machine. |
+| "tasks" | std::string | WKDIR/tasks.csv | The path to a task file (.csv) from which task threads will be generated (see section below for more info). This arg should always be specified as the default value is specific to my machine. |
 | "halt" | bool | true | Whether or not the program will call a shutdown when it exits. This should be specified as 1 or 0 compared a textual value of "true" or "false" (these would both be resolved as true). | 
  - Example: `sudo /path/to/program/pihost tasks=/path/to/tasks.csv halt=0`
 ## Tasks
