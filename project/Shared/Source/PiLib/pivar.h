@@ -1,6 +1,9 @@
 //GLOBAL COMPILE-TIME VARS
 #pragma once
 
+#ifndef _RESOURCES
+#define _RESOURCES
+
 #define CHRONO std::chrono
 #define CE_STR constexpr char const*
 
@@ -23,28 +26,21 @@ CE_STR endline =
 "\n";
 #endif
 
-namespace locations {
-	namespace stats {
-		CE_STR cpu = "/proc/stat";
-		CE_STR network = "/proc/net/dev";
-		CE_STR load = "/proc/loadavg";
-		CE_STR disk = "/proc/diskstats";
-		CE_STR mem = "/proc/meminfo";
-	}
+#endif
 
-	namespace external { 
-		CE_STR winbackup = "/data/pihost/resources/rsyncbackup.csv";
-		//CE_STR r_winbackup = "../external/rsyncbackup.csv";
-		CE_STR tasks = "/data/pihost/resources/tasks.csv";
-		//CE_STR r_tasks = "../external/tasks.csv";
-	}
-}
-
-namespace gpin {
-	constexpr unsigned short pi_fan = 18;
-	constexpr unsigned short pi_power = 3;
-
-	constexpr unsigned short pc_power = 20;
-	constexpr unsigned short pc_reset = 16;
-	constexpr unsigned short pc_status = 12;
-}
+//namespace locations {
+//	namespace stats {
+//		CE_STR cpu = "/proc/stat";
+//		CE_STR network = "/proc/net/dev";
+//		CE_STR load = "/proc/loadavg";
+//		CE_STR disk = "/proc/diskstats";
+//		CE_STR mem = "/proc/meminfo";
+//	}
+//
+//	namespace external { 
+//		CE_STR winbackup = "/data/pihost/resources/rsyncbackup.csv";
+//		//CE_STR r_winbackup = "../external/rsyncbackup.csv";
+//		CE_STR tasks = "/data/pihost/resources/tasks.csv";
+//		//CE_STR r_tasks = "../external/tasks.csv";
+//	}
+//}

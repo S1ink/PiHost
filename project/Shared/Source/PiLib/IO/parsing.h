@@ -35,7 +35,7 @@ namespace pilib {
 		DayTime tme;
 	};
 
-	void streamWrapper(const char* message, std::ostream const& output, TaskFunc func);
+	/*void streamWrapper(const char* message, std::ostream const& output, TaskFunc func);
 	void streamWrapper(const char* message, pilib::lstream output, TaskFunc func);
-	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::unordered_map<std::string, TaskFunc>& funcmap);
+	void parseTasks(const char* filepath, std::ostream& output, std::atomic_bool& control, time_t th_uintv, std::vector<std::thread>& threads, std::unordered_map<std::string, TaskFunc>& funcmap);*/
 }

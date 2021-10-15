@@ -1,8 +1,15 @@
 #pragma once
 
-#include "../STD.h"
-#include "../pivar.h"
 #include "pigpio.h"
+
+namespace gpin {
+	constexpr unsigned short pi_fan = 18;
+	constexpr unsigned short pi_power = 3;
+
+	constexpr unsigned short pc_power = 20;
+	constexpr unsigned short pc_reset = 16;
+	constexpr unsigned short pc_status = 12;
+}
 
 namespace pilib {
 	int getStatus();

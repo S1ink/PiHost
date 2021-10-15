@@ -13,7 +13,7 @@ namespace pilib {
 	private:
 		CHRONO::time_point<CHRONO::high_resolution_clock> ref;
 		uint8_t settings;
-		olstream output;
+		olstream buff, *output;
 		const char* scope;
 	public:
 		static const uint8_t ON_EXIT = 2;
@@ -22,6 +22,7 @@ namespace pilib {
 		StopWatch(olstream&& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
 		StopWatch(const char* scope, const olstream& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
 		StopWatch(const char* scope, olstream&& out = &std::cout, uint8_t settings = (ON_EXIT | NOW));
+		StopWatch(const char* scope, olstream* out, uint8_t settings = (ON_EXIT | NOW));
 		~StopWatch();
 
 		void setStart();

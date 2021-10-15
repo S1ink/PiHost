@@ -75,7 +75,7 @@ namespace pilib {
 
 
 
-    void streamWrapper(const char* message, std::ostream const& output, TaskFunc func) {
+    /*void streamWrapper(const char* message, std::ostream const& output, TaskFunc func) {
         std::ostream& out = const_cast<std::ostream&>(output);
         if (typeid(output) == typeid(std::ofstream)) {
             std::ofstream fout;
@@ -92,9 +92,9 @@ namespace pilib {
         output.openOutput();
         func(message, output);
         output.close();
-    }
+    }*/
 
-    void parseTasks(
+   /* void parseTasks(
         const char* filepath,
         std::ostream& output,
         std::atomic_bool& control,
@@ -151,5 +151,5 @@ namespace pilib {
                 threads.emplace_back(std::move(th));
             }
         }
-    }
+    }*/
 }

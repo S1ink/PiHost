@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{d280e1d2-6d39-43fe-af83-dae7351d5770}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\basic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\output.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\program.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\resources.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\sighandle.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\threading.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\timing.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\basic.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\output.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\program.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\sighandle.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\timing.cpp" />
+  </ItemGroup>
+</Project>

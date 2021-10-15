@@ -3,6 +3,14 @@
 #include "../STD.h"
 #include "../pivar.h"
 
+//namespace stats {
+//	CE_STR cpu = "/proc/stat";
+//	CE_STR network = "/proc/net/dev";
+//	CE_STR load = "/proc/loadavg";
+//	CE_STR disk = "/proc/diskstats";
+//	CE_STR mem = "/proc/meminfo";
+//}
+
 namespace pilib {
 	//class SYS {
 	//	// all stats here
@@ -22,7 +30,7 @@ namespace pilib {
 			};
 			static const std::array<States, 2> s_idle;
 			static const std::array<States, 8> s_active;
-			static CE_STR source = "/proc/stat";
+
 		protected:
 			std::string title;
 			std::streampos hint;
@@ -36,6 +44,7 @@ namespace pilib {
 			void fromPos(const std::streampos& begin);
 			void fromTag(const std::string& tag);
 			void fromNum(uint corenum);
+
 		public:
 			void update();	//updates from main CPU stats
 			//void update(std::istream& file);
@@ -127,6 +136,7 @@ namespace pilib {
 
 		uint c_cores;
 		Svec reference, buffer;
+		static CE_STR source = "/proc/stat";
 	};
 
 	class NET {
@@ -159,17 +169,21 @@ namespace pilib {
 			MultiStat getBytes();
 			MultiStat getPackets();
 			ulong getStat(Stats stat);
+
 		private:
 			static const std::array<Stats, 2> s_speeds;	//use a different system if more stats become relevant
 			static const std::array<Stats, 2> s_packets;
 		};
 	public:
 
+	private:
+		static CE_STR source = "/proc/net/dev";
 	};
 
 	//old
 	namespace sys {
 		namespace cpu {
+			static CE_STR source = "/proc/stat";
 			constexpr int parsable_states = 10;
 
 			struct LineParse {

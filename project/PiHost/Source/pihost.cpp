@@ -1,18 +1,29 @@
-#define INCLUDE_STD
-#define VARS
-#include "pilib.h"
+#include <iostream>
+#include <pigpio.h>
 
 #include "tasks.h"
+#include "parse.h"
 
-CE_STR version = "1.3.6";
+#include "output.h"
+#include "timing.h"
+#include "basic.h"
+#include "sighandle.h"
+#include "program.h"
+#include "resources.h"
 
-//all compatible thread modules must be in the from of ~ typedef void(*templatefunc)(const char*, std::ostream&)
+#include "PiLib/System/syscom.h"
+#include "PiLib/System/stats.h"
+#include "PiLib/IO/gpio.h"
+
+CE_STR version = "1.3.6b";
+
+//all compatible thread modules must be in the from of ~ typedef void(*)(const char*, std::ostream&)
 namespace thmods {
-    void aptRun(const char* message, const pilib::olstream& logs) {
-        pilib::olstream out(logs);
+    void aptRun(const char* message, const olstream& logs) {
+        olstream out(logs);
         const char* sep = "*******************************************************************";
-        pilib::StopWatch ptime("Total elapsed time", logs, 0);
-        ((((out <<= sep) <= "\nPihost internal APT updater initialized. (") <= pilib::dateStamp()) <= ")\n") <= sep;
+        StopWatch ptime("Total elapsed time", &out, 0);
+        ((((out <<= sep) <= "\nPihost internal APT updater initialized. (") <= dateStamp()) <= ")\n") <= sep;
 
         ((out <= "\n\nUpdating Repos:\n") <= sep) <= newline;
         int updates = pilib::aptUpdate(out.open());
@@ -23,46 +34,46 @@ namespace thmods {
         out <= "\nCleaning... ";
         system("sudo apt clean");
         out <= "Finished cleaning.\n\n"
-            <= sep <= "\nProcess finished at: " <= pilib::dateStamp() 
+            <= sep <= "\nProcess finished at: " <= dateStamp() 
             <= "\nUpdates: " <= updates <= "\nUpgrades: " <= upgrades < newline;
         ptime.end();
     }
 
-    void winBackup(const char* message, const pilib::olstream& logs) {
-        pilib::olstream out(logs);
+    void winBackup(const char* message, const olstream& logs) {
+        olstream out(logs);
         const char* sep = "*****************************************************************";
-        pilib::StopWatch ptime("Total elapsed time", logs, 0);
-        (((((out <<= sep) <= "\nPihost internal WinBackup initialized. (") <= pilib::dateStamp()) <= ")\n") <= sep) <= "\n\n";
+        StopWatch ptime("Total elapsed time", &out, 0);
+        (((((out <<= sep) <= "\nPihost internal WinBackup initialized. (") <= dateStamp()) <= ")\n") <= sep) <= "\n\n";
 
-        pilib::winSync(locations::external::winbackup, out.open());
+        winSync(message, out.open());
 
-        out <= sep <= "\nProcess finished at: " <= pilib::dateStamp() < newline;
+        out <= sep <= "\nProcess finished at: " <= dateStamp() < newline;
         ptime.end();
     }
 }
 
 std::atomic_bool run = { true };
 bool halt_on_exit = true;
-pilib::olstream m_out;
+olstream m_out;
 
 #ifndef TESTING
 void callback(int gpio, int level, uint32_t tick) {
     if (run != false) {
-        m_out << pilib::withTime("Button pressed - initiating exit\n");
+        m_out << withTime("Button pressed - initiating exit\n");
         run = false;
     }
 }
 #endif
 
 void sigShutdown(int signum) {
-    pilib::SigHandle::printExit(signum);
+    SigHandle::printExit(signum);
     run = false;
     halt_on_exit = false;
 }
 
 //add argument support for paths and intervals
 int main(int argc, char* argv[]) {
-    pilib::progdir.setDir(argv[0]);
+    progdir.setDir(argv[0]);
 
     time_t update_intv = 10;
 #ifndef TESTING
@@ -72,12 +83,12 @@ int main(int argc, char* argv[]) {
 #endif
     int warn_temp = 40;
 #ifndef TESTING
-    std::string main_output(std::move(pilib::progdir.getDirSlash() + "pihost.txt"));
+    std::string main_output(std::move(progdir.getDirSlash() + "pihost.txt"));
 #endif
-    std::string taskfile_path(std::move(pilib::progdir.getDirSlash() + "tasks.csv"));
+    std::string taskfile_path(std::move(progdir.getDirSlash() + "tasks.csv"));
 
     if (argc > 1) {
-        pilib::ArgsHandler& args = pilib::ArgsHandler::get();
+        ArgsHandler& args = ArgsHandler::get();
         args.insertVars({
 #ifndef TESTING
             {"fanpin", &fan_pin},
@@ -99,7 +110,7 @@ int main(int argc, char* argv[]) {
     m_out.setStream(main_output.c_str(), std::ios::app);
 #endif
 
-    (((m_out <<= pilib::dateStamp()) <= " : Startup - PiHost v.") <= version) < newline;
+    (((m_out <<= dateStamp()) <= " : Startup - PiHost v.") <= version) < newline;
 
 #ifndef TESTING
     gpioInitialise();
@@ -108,8 +119,8 @@ int main(int argc, char* argv[]) {
     gpioSetISRFunc(button_pin, RISING_EDGE, 0, callback);
 #endif
 
-    pilib::sig_handle.setLog(m_out);
-    pilib::sig_handle.setup(sigShutdown);
+    sig_handle.setLog(m_out);
+    sig_handle.setup(sigShutdown);
 
     TaskManager tasks(
         std::move(taskfile_path),
@@ -121,14 +132,14 @@ int main(int argc, char* argv[]) {
     tasks.launch();
 
     std::this_thread::sleep_for(CHRONO::seconds(1));
-    (((m_out <<= pilib::dateStamp()) <= " : ") <= tasks.getThreads()) < " task threads started\n";
+    (((m_out <<= dateStamp()) <= " : ") <= tasks.getThreads()) < " task threads started\n";
 
     //TODO: PID loop
-    double temp;
+    float temp;
     while (run) {
         temp = pilib::sys::cpuTemp();
         if (temp >= warn_temp) {
-            (((((m_out <<= pilib::dateStamp()) <= " : High SoC temp of ") <= temp) <= "*C - {CPU%:") <= pilib::sys::cpuPercent(CHRONO::seconds(1))) < "}\n";
+            (((((m_out <<= dateStamp()) <= " : High SoC temp of ") <= temp) <= "*C - {CPU%:") <= pilib::sys::cpuPercent(CHRONO::seconds(1))) < "}\n";
         }
         std::this_thread::sleep_for(CHRONO::seconds(update_intv));
     }
@@ -138,10 +149,10 @@ int main(int argc, char* argv[]) {
     gpioTerminate();
 #endif
 
-    (m_out <<= pilib::dateStamp()) <= " : All thread(s) closed - exitting now\n";   
+    (m_out <<= dateStamp()) <= " : All thread(s) closed - exitting now\n";   
 #ifndef TESTING
     if (halt_on_exit) {
-        m_out <= pilib::dateStamp() < " : Program set to halt on exit - calling shutdown\n\n";
+        m_out <= dateStamp() < " : Program set to halt on exit - calling shutdown\n\n";
         system("sudo halt");    //"sudo shutdown -h now"
         return 0;
     }

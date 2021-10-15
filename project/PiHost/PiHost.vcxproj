@@ -89,6 +89,7 @@
   <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="Shared">
     <Import Project="..\Shared\Shared.vcxitems" Label="Shared" />
+    <Import Project="..\Cross-Platform\Cross-Platform.vcxitems" Label="Shared" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
@@ -99,8 +100,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <TargetExt>.armx</TargetExt>
@@ -109,8 +110,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <TargetExt>.armx</TargetExt>
@@ -119,8 +120,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <TargetExt>.armx</TargetExt>
@@ -129,8 +130,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetExt>.armx</TargetExt>
@@ -139,8 +140,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetExt>.armx</TargetExt>
@@ -149,8 +150,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <TargetExt>.armx</TargetExt>
@@ -159,8 +160,8 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <TargetExt>.armx</TargetExt>
@@ -169,10 +170,11 @@
     <OutDir>$(SolutionDir)out\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)out\$(Configuration)\logs\$(ProjectName)\</IntDir>
     <RemoteDeployDir>$(RemoteRootDir)/deploy/$(ProjectName)</RemoteDeployDir>
-    <IncludePath>$(SolutionDir)Shared\Source\;$(IncludePath)</IncludePath>
-    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems</AdditionalSourcesToCopyMapping>
+    <IncludePath>$(SolutionDir)Shared\Source\;$(SolutionDir)Cross-Platform\Source\;$(IncludePath)</IncludePath>
+    <AdditionalSourcesToCopyMapping>$(ProjectPath);$(SolutionPath):=$(RemoteRootDir)$(RemoteProjectRelDir)$(SolutionFileName);$(SolutionDir)Shared\Shared.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Shared/Shared.vcxitems;$(SolutionDir)Cross-Platform\Cross-Platform.vcxitems:=$(RemoteRootDir)$(RemoteProjectRelDir)Cross-Platform/Cross-Platform.vcxitems</AdditionalSourcesToCopyMapping>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="Source\parse.cpp" />
     <ClCompile Include="Source\pihost.cpp" />
     <ClCompile Include="Source\tasks.cpp" />
   </ItemGroup>
@@ -182,6 +184,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\parse.h" />
     <ClInclude Include="Source\tasks.h" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">

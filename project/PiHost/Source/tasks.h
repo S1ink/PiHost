@@ -1,12 +1,24 @@
 #pragma once
 
-#define INCLUDE_STD
-#define VARS
-#include "pilib.h"
+#include <iostream>
+#include <vector>
+#include <atomic>
+#include <unordered_map>
+#include <thread>
+#include <string>
+#include <sstream>
+
+#include "output.h"
+#include "timing.h"
+#include "basic.h"
+#include "threading.h"
+#include "resources.h"
+
+#include "PiLib/System/syscom.h"
 
 //#define TESTING
 
-typedef void(*Task_f)(const char*, const pilib::olstream&);
+typedef void(*Task_f)(const char*, const olstream&);
 
 class TaskManager {
 private:
@@ -14,14 +26,14 @@ private:
 		std::string name;
 		std::string output;
 		std::string w_mode;
-		pilib::DayTime tme;
+		DayTime tme;
 		std::string args;
 	};
 
 	std::string tfile;
 	std::vector<std::thread> threads;
 	std::atomic_bool* external;
-	pilib::olstream output;
+	olstream output;
 	std::unordered_map<std::string, Task_f> funcmap;
 	const time_t clock;	//seconds
 
@@ -33,21 +45,21 @@ public:
 		std::string&& path, 
 		std::atomic_bool& rbool, 
 		const std::unordered_map<std::string, Task_f>& funcs, 
-		const pilib::olstream& out = &std::cout, 
+		const olstream& out = &std::cout, 
 		time_t clock_intv = 10
 	);
 	TaskManager(
 		std::string&& path, 
 		std::atomic_bool& rbool, 
 		const std::unordered_map<std::string, Task_f>& funcs, 
-		pilib::olstream&& out = &std::cout, 
+		olstream&& out = &std::cout, 
 		time_t clock_intv = 10
 	);
 	TaskManager(
 		const std::string& path,
 		std::atomic_bool& rbool,
 		const std::unordered_map<std::string, Task_f>& funcs,
-		const pilib::olstream& out = &std::cout,
+		const olstream& out = &std::cout,
 		time_t clock_intv = 10
 	);
 	//TaskManager(const TaskManager& other);
@@ -64,6 +76,6 @@ public:
 
 	size_t getThreads();
 
-	static void runCommand(const char* message, const pilib::olstream& logs);
-	static void errorName(const char* message, const pilib::olstream& logs);
+	static void runCommand(const char* message, const olstream& logs);
+	static void errorName(const char* message, const olstream& logs);
 };

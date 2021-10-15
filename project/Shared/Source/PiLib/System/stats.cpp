@@ -20,7 +20,7 @@ namespace pilib {
 		}
 	}
 	void CPU::CoreData::parse(const std::streampos& begin) {
-		std::ifstream reader(this->source);
+		std::ifstream reader(source);
 		reader.seekg(begin);
 		reader >> this->title;
 		for (uint i = 0; i < (uint)States::TOTAL; i++) {
@@ -56,7 +56,7 @@ namespace pilib {
 	}
 
 	void CPU::CoreData::update() {
-		std::ifstream reader(this->source);
+		std::ifstream reader(source);
 		if (std::streamoff(this->hint)) {	//use != if streamoff conversion is bad
 			if (!this->title.compare(0, 3, "cpu")) {
 				std::string back = this->title;	//std::move?
@@ -97,7 +97,7 @@ namespace pilib {
 		}
 	}*/
 	uint CPU::CoreData::updateFrom(uint core) {
-		std::ifstream reader(this->source);
+		std::ifstream reader(source);
 		std::string buffer;
 		uint j;
 		for (j = 0; j <= core; j++) {
@@ -207,7 +207,7 @@ namespace pilib {
 	}
 
 	void CPU::CoreData::readAll(std::vector<CoreData>& lines) {
-		std::ifstream reader(locations::stats::cpu);
+		std::ifstream reader(source);
 		std::string buffer;
 		while (std::getline(reader, buffer)) {
 			if (!buffer.compare(0, 3, "cpu")) {
@@ -245,7 +245,7 @@ namespace pilib {
 		return this->c_cores;
 	}
 	uint CPU::cCount() {
-		std::ifstream reader(locations::stats::cpu);
+		std::ifstream reader(source);
 		std::string buffer;
 		uint cores = 0;
 		while (std::getline(reader, buffer)) {
@@ -260,7 +260,7 @@ namespace pilib {
 	}
 
 	void CPU::update(Svec& container) {
-		std::fstream reader(locations::stats::cpu);
+		std::fstream reader(source);
 		std::string buffer;
 		for (uint i = 0; i <= this->c_cores; i++) {
 			std::getline(reader, buffer);
@@ -346,7 +346,7 @@ namespace pilib {
 	}
 
 	void NET::Interface::update() {	//TODO: modularize the functionality in this function
-		std::ifstream reader(locations::stats::network);
+		std::ifstream reader(source);
 		std::string buffer;
 		std::streampos start;
 		while (true) {	//find where interfaces start
@@ -409,7 +409,7 @@ namespace pilib {
 			}
 
 			void readMain(LineParse& container) {
-				std::ifstream reader(locations::stats::cpu);
+				std::ifstream reader(source);
 				reader >> container.title;
 				for (int i = 0; i < parsable_states; i++) {
 					reader >> container.time[i];
@@ -418,7 +418,7 @@ namespace pilib {
 			}
 
 			void readVector(std::vector<LineParse>& container) {
-				std::ifstream reader(locations::stats::cpu);
+				std::ifstream reader(source);
 				std::string linebuffer;
 				while (std::getline(reader, linebuffer)) {
 					if (!linebuffer.compare(0, 3, "cpu")) {

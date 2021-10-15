@@ -13,17 +13,22 @@ namespace pilib {
         return diff.count();
     }
 
-    StopWatch::StopWatch(olstream&& out, uint8_t settings) : settings(settings), output(std::move(out)), scope("Elapsed time") {
+    StopWatch::StopWatch(olstream&& out, uint8_t settings) : settings(settings), buff(std::move(out)), output(&buff), scope("Elapsed time") {
         if (settings & this->NOW) {
             this->setStart();
         }
     }
-    StopWatch::StopWatch(const char* scope, const olstream& out, uint8_t settings) : settings(settings), output(out), scope("Elapsed time") {
+    StopWatch::StopWatch(const char* scope, const olstream& out, uint8_t settings) : settings(settings), buff(out), output(&buff), scope("Elapsed time") {
         if (settings & this->NOW) {
             this->setStart();
         }
     }
-    StopWatch::StopWatch(const char* scope, olstream&& out, uint8_t settings) : settings(settings), output(std::move(out)), scope(scope) {
+    StopWatch::StopWatch(const char* scope, olstream&& out, uint8_t settings) : settings(settings), buff(std::move(out)), output(&buff), scope(scope) {
+        if (settings & this->NOW) {
+            this->setStart();
+        }
+    }
+    StopWatch::StopWatch(const char* scope, olstream* out, uint8_t settings) : settings(settings), output(out), scope(scope) {
         if (settings & this->NOW) {
             this->setStart();
         }
@@ -44,7 +49,7 @@ namespace pilib {
     }
     void StopWatch::print() {
         CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;
-        ((((this->output <<= this->scope) <= " : ") <= diff.count()) < " seconds\n");
+        (((this->output->operator<<=(this->scope) <= " : ") <= diff.count()) < " seconds\n");
     }
     void StopWatch::print(olstream&& out) {
         CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;

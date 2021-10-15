@@ -204,12 +204,25 @@ int main(int argc, char* argv[], char* envp[]) {
 	//pilib::sig_handle.setadv();	//update sighandle
 	//pilib::sig_handle.setLog("/data/server.txt");
 
-	std::thread main(outer1, &std::cout);
-	
-	std::this_thread::sleep_for(CHRONO::seconds(30));
-	thr = false;
+	std::string buffer;
+	std::cout << "Enter some integers: ";
+	std::cin >> buffer;
+	std::istringstream stream(buffer);
+	while (std::getline(stream, buffer, comma)) {
+		std::istringstream numstream(buffer);
+		int i;
+		numstream >> i;
+		std::cout << i+1 << newline;
+	}
 
-	main.join();
+
+
+	//std::thread main(outer1, &std::cout);
+	
+	//std::this_thread::sleep_for(CHRONO::seconds(30));
+	//thr = false;
+
+	//main.join();
 
 	//pilib::http::HttpServer server(&std::cout, nullptr, pilib::http::Version::HTTP_1_1, "/data/pihost/resources");
 	//server.serve();
