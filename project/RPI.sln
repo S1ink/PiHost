@@ -15,16 +15,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Application
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WebServer", "WebServer\WebServer.vcxproj", "{37318989-71A6-47AE-B47F-10753665E1C2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cross-Platform", "Cross-Platform\Cross-Platform.vcxitems", "{D280E1D2-6D39-43FE-AF83-DAE7351D5770}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Extended STD", "Cross-Platform\Cross-Platform.vcxitems", "{D280E1D2-6D39-43FE-AF83-DAE7351D5770}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Shared\Shared.vcxitems*{300657d7-c28a-4ac6-90f4-310e74ab1c1d}*SharedItemsImports = 4
+		Cross-Platform\Cross-Platform.vcxitems*{300657d7-c28a-4ac6-90f4-310e74ab1c1d}*SharedItemsImports = 4
 		Shared\Shared.vcxitems*{37318989-71a6-47ae-b47f-10753665e1c2}*SharedItemsImports = 4
 		Shared\Shared.vcxitems*{924e54eb-d800-47a3-ac66-ecc661ead86c}*SharedItemsImports = 9
 		Shared\Shared.vcxitems*{b5f1a6eb-f376-4807-9820-219ef8680352}*SharedItemsImports = 4
 		Cross-Platform\Cross-Platform.vcxitems*{d18bece2-8403-40e2-8c33-fe7636a9d5a5}*SharedItemsImports = 4
-		Shared\Shared.vcxitems*{d18bece2-8403-40e2-8c33-fe7636a9d5a5}*SharedItemsImports = 4
 		Cross-Platform\Cross-Platform.vcxitems*{d280e1d2-6d39-43fe-af83-dae7351d5770}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

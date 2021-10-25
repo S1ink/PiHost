@@ -48,7 +48,7 @@ double StopWatch::getDuration() {
 }
 void StopWatch::print() {
     CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;
-    (((this->output->operator<<=(this->scope) <= " : ") <= diff.count()) < " seconds\n");
+    (((this->output->operator<<=(this->scope) <= ": ") <= diff.count()) < " seconds\n");
 }
 void StopWatch::print(olstream&& out) {
     CHRONO::duration<double> diff = CHRONO::high_resolution_clock::now() - ref;
@@ -79,10 +79,8 @@ void DayTime::update() {
         sec = now % 60;
     }
 }
-void DayTime::update(DayTime& tme) {
-
-}
-bool DayTime::now() {
+//void DayTime::update(DayTime& tme) {}
+bool DayTime::isRelative() {
     return ((hr < 0) && (min < 0) && (sec < 0));
 }
 time_d DayTime::toTOD() {

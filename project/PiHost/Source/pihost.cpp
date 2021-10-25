@@ -1,8 +1,8 @@
 #include <iostream>
+#include <sstream>
+#include <atomic>
+#include <thread>
 #include <pigpio.h>
-
-#include "tasks.h"
-#include "parse.h"
 
 #include "output.h"
 #include "timing.h"
@@ -10,46 +10,61 @@
 #include "sighandle.h"
 #include "program.h"
 #include "resources.h"
+#include "unix/syscom.h"
+#include "unix/stats.h"
+//#include <rpi/pigpio.h>
 
-#include "PiLib/System/syscom.h"
-#include "PiLib/System/stats.h"
-#include "PiLib/IO/gpio.h"
+//#define TESTING
 
-CE_STR version = "1.3.6b";
+#include "tasks.h"
+#include "parse.h"
+
+CE_STR version = "1.3.7";
+
+#define GPIO_FAN 18
+#define GPIO_PWR 3
 
 //all compatible thread modules must be in the from of ~ typedef void(*)(const char*, std::ostream&)
-namespace thmods {
-    void aptRun(const char* message, const olstream& logs) {
-        olstream out(logs);
-        const char* sep = "*******************************************************************";
-        StopWatch ptime("Total elapsed time", &out, 0);
-        ((((out <<= sep) <= "\nPihost internal APT updater initialized. (") <= dateStamp()) <= ")\n") <= sep;
+void aptRun(const std::string& message, const olstream& logs) {
+    olstream outl(logs);
+    std::ostringstream out;
 
-        ((out <= "\n\nUpdating Repos:\n") <= sep) <= newline;
-        int updates = pilib::aptUpdate(out.open());
+    const char* sep = "*******************************************************************";
+    StopWatch ptime("Total elapsed time", &out, 0);
 
-        out <= "\nUpgrading:\n" <= sep <= newline;
-        int upgrades = pilib::aptUpgrade(out.open());
+    out << sep << "\nPihost internal APT updater initialized. (" << dateStamp() << ")\n" << sep;
 
-        out <= "\nCleaning... ";
-        system("sudo apt clean");
-        out <= "Finished cleaning.\n\n"
-            <= sep <= "\nProcess finished at: " <= dateStamp() 
-            <= "\nUpdates: " <= updates <= "\nUpgrades: " <= upgrades < newline;
-        ptime.end();
-    }
+    out << "\n\nUpdating Repos:\n" << sep << newline;
+    int updates = aptUpdate(out);
 
-    void winBackup(const char* message, const olstream& logs) {
-        olstream out(logs);
-        const char* sep = "*****************************************************************";
-        StopWatch ptime("Total elapsed time", &out, 0);
-        (((((out <<= sep) <= "\nPihost internal WinBackup initialized. (") <= dateStamp()) <= ")\n") <= sep) <= "\n\n";
+    out << "\nUpgrading:\n" << sep << newline;
+    int upgrades = aptUpgrade(out);
 
-        winSync(message, out.open());
+    out << "\nCleaning... ";
+    system("sudo apt clean");
+    out << "Finished cleaning.\n\n"
+        << sep << "\nProcess finished at: " << dateStamp()
+        << "\nUpdates: " << updates << "\nUpgrades: " << upgrades << newline;
+    ptime.end();
 
-        out <= sep <= "\nProcess finished at: " <= dateStamp() < newline;
-        ptime.end();
-    }
+    outl << out.str();
+}
+
+void winBackup(const std::string& message, const olstream& logs) {
+    olstream outl(logs);
+    std::ostringstream out;
+
+    const char* sep = "*****************************************************************";
+    StopWatch ptime("Total elapsed time", &out, 0);
+
+    out << sep << "\nPihost internal WinBackup initialized. (" << dateStamp() << ")\n" << sep << "\n\n";
+
+    winSync(message.c_str(), out);
+
+    out << sep << "\nProcess finished at: " << dateStamp() << newline;
+    ptime.end();
+
+    outl << out.str();
 }
 
 std::atomic_bool run = { true };
@@ -71,21 +86,25 @@ void sigShutdown(int signum) {
     halt_on_exit = false;
 }
 
-//add argument support for paths and intervals
+
+// ************ MAIN ************
+
 int main(int argc, char* argv[]) {
+
+#ifdef TESTING
+    std::cout << " ******* TESTING MODE ******* \n\n";
+#endif
     progdir.setDir(argv[0]);
 
     time_t update_intv = 10;
-#ifndef TESTING
-    uint fan_pin = gpin::pi_fan;
-    uint button_pin = gpin::pi_power;
-    float fan_speed = 40.f;
-#endif
     int warn_temp = 40;
 #ifndef TESTING
+    float fan_speed = 40.f;
+    uint fan_pin = GPIO_FAN;
+    uint button_pin = GPIO_PWR;
     std::string main_output(std::move(progdir.getDirSlash() + "pihost.txt"));
 #endif
-    std::string taskfile_path(std::move(progdir.getDirSlash() + "tasks.csv"));
+    std::string taskfile_path(std::move(progdir.getDirSlash() + "tasks.csv"));    
 
     if (argc > 1) {
         ArgsHandler& args = ArgsHandler::get();
@@ -94,12 +113,10 @@ int main(int argc, char* argv[]) {
             {"fanpin", &fan_pin},
             {"buttonpin", &button_pin},
             {"fanspeed", &fan_speed},
+            {"output", &main_output},
 #endif
             {"warningtemp", &warn_temp},
             {"pollinterval", &update_intv},
-#ifndef TESTING
-            {"output", &main_output},
-#endif
             {"tasks", &taskfile_path},
             {"halt", &halt_on_exit}
         });
@@ -125,10 +142,14 @@ int main(int argc, char* argv[]) {
     TaskManager tasks(
         std::move(taskfile_path),
         run,
-        { {"apt", thmods::aptRun}, {"winbackup", thmods::winBackup}, },
+        { {"apt", aptRun}, {"winbackup", winBackup}, },
         m_out,
         update_intv
     );
+
+    /*std::cout << "safe?\n\n";
+    std::this_thread::sleep_for(CHRONO::seconds(3));*/
+
     tasks.launch();
 
     std::this_thread::sleep_for(CHRONO::seconds(1));
@@ -137,9 +158,9 @@ int main(int argc, char* argv[]) {
     //TODO: PID loop
     float temp;
     while (run) {
-        temp = pilib::sys::cpuTemp();
+        temp = sys::cpuTemp();
         if (temp >= warn_temp) {
-            (((((m_out <<= dateStamp()) <= " : High SoC temp of ") <= temp) <= "*C - {CPU%:") <= pilib::sys::cpuPercent(CHRONO::seconds(1))) < "}\n";
+            (((((m_out <<= dateStamp()) <= " : High SoC temp of ") <= temp) <= "*C - {CPU%:") <= sys::cpuPercent(CHRONO::seconds(1))) < "}\n";
         }
         std::this_thread::sleep_for(CHRONO::seconds(update_intv));
     }
@@ -161,6 +182,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 #else
+    m_out << "(Testing mode - press [RETURN] to exit)\n";
+    std::cin.ignore();
     return 0;
 #endif
 }

@@ -4,31 +4,58 @@
 olstream::olstream() : 
     fmode(0), stream(&std::cout), fname(nullptr), omodes(std::ios::out) {}
 olstream::olstream(const char* file, const OMODE modes) :
-    fmode(1), stream(&std::cout), fname(file), omodes(modes) {}
+    fmode(1), stream(&std::cout), omodes(modes) 
+{
+    this->fname = new char[strlen(file)+1];
+    strcpy(this->fname, file); 
+}
 olstream::olstream(const OMODE modes) : 
     fmode(0), stream(&std::cout), fname(nullptr), omodes(modes) {}
 olstream::olstream(std::ostream* stream) : 
     fmode(0), stream(stream), fname(nullptr), omodes(std::ios::out) {}
 olstream::olstream(std::ostream* stream, const char* file, const OMODE modes) : 
-    fmode(0), stream(stream), fname(file), omodes(modes) {}
-olstream::olstream(const olstream& other) : 
-    fmode(other.fmode), stream(other.stream), fname(other.fname), omodes(other.omodes) 
+    fmode(0), stream(stream), omodes(modes) 
 {
-    this->checkStream();
+    this->fname = new char[strlen(file)+1];
+    strcpy(this->fname, file); 
+}
+olstream::olstream(const olstream& other) : 
+    fmode(other.fmode), stream(other.stream), omodes(other.omodes) 
+{ 
+    if (other.fname) {
+        this->fname = new char[strlen(other.fname) + 1];
+        strcpy(this->fname, other.fname);
+    }
+    else {
+        this->fname = nullptr;
+    }
 }
 olstream::olstream(olstream&& other) : 
-    fmode(other.fmode), file(std::move(other.file)), stream(other.stream), fname(other.fname), omodes(other.omodes)
-{
-    if(this->checkStream()) {
-        other.stream = nullptr;
-    }
+    fmode(other.fmode), file(std::move(other.file)), stream(other.stream), fname(other.fname), omodes(other.omodes) 
+{ 
+    if(this->checkStream()) { 
+        other.stream = nullptr; 
+    } 
+    other.fname = nullptr;
+}
+olstream::~olstream() { 
+    delete[] this->fname; 
 }
 
 void olstream::operator=(const olstream& other) {
     this->fmode = other.fmode;
     this->stream = other.stream;
-    this->fname = other.fname;
     this->omodes = other.omodes;
+
+    if (other.fname) {
+        delete[] this->fname;
+        this->fname = new char[strlen(other.fname)+1];
+        strcpy(this->fname, other.fname);
+    }
+    else {
+        this->fname = nullptr;
+    }
+
     this->checkStream();
 }
 void olstream::operator=(olstream&& other) {
@@ -36,7 +63,9 @@ void olstream::operator=(olstream&& other) {
         this->fmode = other.fmode;
         this->file = std::move(other.file);
         this->stream = other.stream;
+        delete[] this->fname;
         this->fname = other.fname;
+        other.fname = nullptr;
         this->omodes = other.omodes;
 
         if(this->checkStream()) {
@@ -67,12 +96,21 @@ void olstream::addModes(const OMODE modes) {
 }
 void olstream::setStream(const char* file) {
     this->fmode = 1;
-    this->fname = file;
+    
+    if (file) {
+        delete[] this->fname;
+        this->fname = new char[strlen(file)+1];
+        strcpy(this->fname, file);
+    }
 }
 void olstream::setStream(const char* file, const OMODE modes) {
     this->fmode = 1;
-    this->fname = file;
     this->omodes = modes;
+    if (file) {
+        delete[] this->fname;
+        this->fname = new char[strlen(file)+1];
+        strcpy(this->fname, file);
+    }
 }
 void olstream::setStream(std::ostream* stream) {
     this->fmode = 0;
@@ -88,10 +126,9 @@ const char* olstream::getPath() {
 
 std::ostream& olstream::open() {
     if (this->fname) {
-        if (this->file.is_open()) {
-            return this->file;
+        if (!this->file.is_open()) {
+            this->file.open(this->fname);
         }
-        this->file.open(this->fname);
         return this->file;
     }
     return streamGuard();

@@ -49,6 +49,13 @@ const char* dateStamp(time_t* tme) {
     return t;
 }
 
+const char* safeNull(const char* str) {
+    return str ? str : "(nullptr)";
+}
+size_t safeLen(const char* str) {
+    return str ? strlen(str) : 0;
+}
+
 std::string withTime(const char* message) {
     std::string ret(dateStamp());
     ret.reserve(strlen(message) + 4);

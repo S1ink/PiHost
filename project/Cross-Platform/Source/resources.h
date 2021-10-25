@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef _RESOURCES
-#define _RESOURCES
+//#ifndef _RESOURCES
+//#define _RESOURCES
 
 #define CHRONO std::chrono
 #define CE_STR constexpr char const*
@@ -27,4 +27,4 @@ CE_STR endline =
 
 typedef unsigned int uint;
 
-#endif
+//#endif

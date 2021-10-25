@@ -57,9 +57,9 @@ struct DayTime {
 	DayTime(const int16_t hr = 0, const int16_t min = 0, const int16_t sec = 0) : hr(hr), min(min), sec(sec) {}
 
 	void update();
-	static void update(DayTime& tme);
+	//static void update(DayTime& tme);
 
-	bool now();
+	bool isRelative();
 	time_d toTOD();
 };
 

@@ -14,11 +14,11 @@
 #include "threading.h"
 #include "resources.h"
 
-#include "PiLib/System/syscom.h"
+#include "unix/syscom.h"
 
 //#define TESTING
 
-typedef void(*Task_f)(const char*, const olstream&);
+typedef void(*Task_f)(const std::string&, const olstream&);
 
 class TaskManager {
 private:
@@ -41,26 +41,26 @@ private:
 protected:
 	static void launchWorker(TaskManager* that);
 public:
-	TaskManager(
+	/*TaskManager(
 		std::string&& path, 
 		std::atomic_bool& rbool, 
 		const std::unordered_map<std::string, Task_f>& funcs, 
 		const olstream& out = &std::cout, 
-		time_t clock_intv = 10
+		time_t clock_intv = 10L
 	);
 	TaskManager(
 		std::string&& path, 
 		std::atomic_bool& rbool, 
 		const std::unordered_map<std::string, Task_f>& funcs, 
 		olstream&& out = &std::cout, 
-		time_t clock_intv = 10
-	);
+		time_t clock_intv = 10L
+	);*/
 	TaskManager(
 		const std::string& path,
 		std::atomic_bool& rbool,
 		const std::unordered_map<std::string, Task_f>& funcs,
 		const olstream& out = &std::cout,
-		time_t clock_intv = 10
+		time_t clock_intv = 10L
 	);
 	//TaskManager(const TaskManager& other);
 	//TaskManager(TaskManager&& ohter);
@@ -76,6 +76,6 @@ public:
 
 	size_t getThreads();
 
-	static void runCommand(const char* message, const olstream& logs);
-	static void errorName(const char* message, const olstream& logs);
+	static void runCommand(const std::string& message, const olstream& logs);
+	static void errorName(const std::string& message, const olstream& logs);
 };

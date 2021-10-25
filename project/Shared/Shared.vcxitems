@@ -13,15 +13,4 @@
   <ItemGroup>
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\gpio.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\System\stats.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Source\PiLib\System\syscom.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\IO\gpio.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\pivar.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System\stats.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Source\PiLib\System\syscom.h" />
-  </ItemGroup>
 </Project>

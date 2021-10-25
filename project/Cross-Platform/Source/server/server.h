@@ -175,7 +175,7 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 	(this->response.intHeaders())->reset();
 
 	headers.add(   //headers that apply to all
-		Segment({ "Server", "Custom C++ HTTP Server (Raspberry Pi)" })
+		Segment( "Server", "Custom C++ HTTP Server (Raspberry Pi)" )
 	);
 
 	switch (req.getMethod()) {
@@ -202,13 +202,13 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 				body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
 				replace(body, "{{code}}", Codes::getString(Code::NOT_FOUND).c_str());
 				headers.add(
-					Segment({ "Content-Type", "text/html" })
+					Segment( "Content-Type", "text/html" )
 				);
 			}
 			else {  //if not send plain text
 				body = "{Error page not found} - Error: 404 Not Found";
 				headers.add(
-					Segment({ "Content-Type", "text/plain" })
+					Segment( "Content-Type", "text/plain" )
 				);
 			}
 			headers.add({
@@ -238,13 +238,13 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 				body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
 				replace(body, "{{code}}", Codes::getString(Code::NOT_FOUND).c_str());
 				headers.add(
-					Segment({ "Content-Type", "text/html" })
+					Segment( "Content-Type", "text/html" )
 				);
 			}
 			else {  //if not send text
 				body = "{Error page not found} - Error: 404 Not Found";
 				headers.add(
-					Segment({ "Content-Type", "text/plain" })
+					Segment( "Content-Type", "text/plain" )
 				);
 			}
 			headers.add({
@@ -269,13 +269,13 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 			body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
 			replace(body, "{{code}}", Codes::getString(Code::METHOD_NOT_ALLOWED).c_str());
 			headers.add(
-				Segment({ "Content-Type", "text/html" })
+				Segment( "Content-Type", "text/html" )
 			);
 		}
 		else {  //else send plain text
 			body = "{Error page not found} - Error: 405 Method Not Allowed";
 			headers.add(
-				Segment({ "Content-Type", "text/plain" })
+				Segment( "Content-Type", "text/plain" )
 			);
 		}
 		headers.add({
@@ -293,13 +293,13 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 			body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
 			replace(body, "{{code}}", Codes::getString(Code::BAD_REQUEST).c_str());
 			headers.add(
-				Segment({ "Content-Type", "text/html" })
+				Segment( "Content-Type", "text/html" )
 			);
 		}
 		else {  //else send plain text
 			body = "{Error page not found} - Error: 400 Bad Request";
 			headers.add(
-				Segment({ "Content-Type", "text/plain" })
+				Segment( "Content-Type", "text/plain" )
 			);
 		}
 		headers.add({
@@ -316,7 +316,7 @@ void HttpServer2<format_t>::HttpHandler2::respond(const int socket, const char* 
 			body = std::string((std::istreambuf_iterator<char>(reader)), (std::istreambuf_iterator<char>()));
 			replace(body, "{{code}}", Codes::getString(Code::NOT_IMPLEMENTED).c_str());
 			headers.add(
-				Segment({ "Content-Type", "text/html" })
+				Segment( "Content-Type", "text/html" )
 			);
 		}
 		else {  //else send plain text
@@ -377,9 +377,9 @@ void HttpServer2<format_t>::s_serve1_0() {
 			this->t_formatter.onDisconnect(nsock, ipbuff);
 			memset(&buffer, 0, sizeof(buffer));
 		}
-		closesocket(nsock);
+		CLOSE_SOCK(nsock);
 	}
-	closesocket(this->sockmain);
+	CLOSE_SOCK(this->sockmain);
 	this->t_formatter.onServerEnd();
 }
 
@@ -433,7 +433,7 @@ void HttpServer2<format_t>::s_serve1_1() {
 						else {
 							this->lerror("Error recieving data");
 						}
-						closesocket(i);
+						CLOSE_SOCK(i);
 						FD_CLR(i, &master);
 						if (i >= maxfd) {
 							maxfd -= 1;
@@ -448,7 +448,7 @@ void HttpServer2<format_t>::s_serve1_1() {
 			}
 		}
 	}
-	closesocket(this->sockmain);
+	CLOSE_SOCK(this->sockmain);
 	this->t_formatter.onServerEnd();
 }
 

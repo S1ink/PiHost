@@ -6,7 +6,7 @@
 
 #include "basic.h"
 
-#include "PiLib/System/syscom.h"
+#include "unix/syscom.h"
 
 struct WinSync {
 	std::string name;

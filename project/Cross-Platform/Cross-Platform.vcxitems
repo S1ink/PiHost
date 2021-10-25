@@ -4,6 +4,7 @@
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
     <HasSharedItems>true</HasSharedItems>
     <ItemsProjectGuid>{d280e1d2-6d39-43fe-af83-dae7351d5770}</ItemsProjectGuid>
+    <ItemsProjectName>Extended STD</ItemsProjectName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -15,18 +16,30 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\basic.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\networking.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\output.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\program.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\resources.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\server\http.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\server\mimetype.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\server\server.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\sighandle.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\threading.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Source\timing.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\unix\stats.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Source\unix\syscom.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\basic.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\networking.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\output.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\program.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\server\http.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\server\mimetype.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\server\server.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\sighandle.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Source\timing.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\unix\stats.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Source\unix\syscom.cpp" />
   </ItemGroup>
 </Project>

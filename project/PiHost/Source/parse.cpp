@@ -22,12 +22,12 @@ void winSync(const char* filepath, std::ostream& output) {
             std::getline(linestream, databuffer.source, comma);
             std::getline(linestream, databuffer.destination, comma);
             if (std::getline(linestream, databuffer.options)) {
-                pilib::rsync(logs, databuffer.source.c_str(), databuffer.destination.c_str(), databuffer.options.c_str());
+                rsync(logs, databuffer.source.c_str(), databuffer.destination.c_str(), databuffer.options.c_str());
                 output << "Backing up [" << databuffer.name << "] - (" << dateStamp() << "):\n"
                     << beg << newline << logs.str() << end << "\n\n\n\n";
             }
             else {
-                pilib::rsync(logs, databuffer.source.c_str(), databuffer.destination.c_str());
+                rsync(logs, databuffer.source.c_str(), databuffer.destination.c_str());
                 output << "Backing up [" << databuffer.name << "] - (" << dateStamp() << "):\n"
                     << beg << newline << logs.str() << end << "\n\n\n\n";
             }

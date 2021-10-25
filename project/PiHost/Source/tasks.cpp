@@ -1,27 +1,27 @@
 #include "tasks.h"
 
-TaskManager::TaskManager(
-    std::string&& path,
-    std::atomic_bool& rbool,
-    const std::unordered_map<std::string, Task_f>& funcs,
-    const olstream& out,
-    time_t clock_intv
-) :
-    tfile(std::move(path)), external(&rbool), output(out), funcmap(funcs), clock(clock_intv)
-{
-	this->funcmap.insert({ "command", runCommand });
-}
-TaskManager::TaskManager(
-	std::string&& path,
-	std::atomic_bool& rbool,
-	const std::unordered_map<std::string, Task_f>& funcs,
-	olstream&& out,
-	time_t clock_intv
-) : 
-	tfile(std::move(path)), external(&rbool), output(std::move(out)), funcmap(funcs), clock(clock_intv)
-{
-	this->funcmap.insert({ "command", runCommand });
-}
+//TaskManager::TaskManager(
+//    std::string&& path,
+//    std::atomic_bool& rbool,
+//    const std::unordered_map<std::string, Task_f>& funcs,
+//    const olstream& out,
+//    time_t clock_intv
+//) :
+//    tfile(std::move(path)), external(&rbool), output(out), funcmap(funcs), clock(clock_intv)
+//{
+//	this->funcmap.insert({ "command", runCommand });
+//}
+//TaskManager::TaskManager(
+//	std::string&& path,
+//	std::atomic_bool& rbool,
+//	const std::unordered_map<std::string, Task_f>& funcs,
+//	olstream&& out,
+//	time_t clock_intv
+//) : 
+//	tfile(std::move(path)), external(&rbool), output(std::move(out)), funcmap(funcs), clock(clock_intv)
+//{
+//	this->funcmap.insert({ "command", runCommand });
+//}
 TaskManager::TaskManager(
     const std::string& path,
     std::atomic_bool& rbool,
@@ -47,7 +47,7 @@ void TaskManager::launchWorker(TaskManager* that) {
 #endif
     std::ifstream reader;
     std::string linebuffer, numbuff;
-    Task_t databuffer;
+    Task_t databuffer;                  // << this is causing problems 
     Task_f funcbuff;
     std::atomic_bool swap = { false }, *swap_ptr = that->external;
 
@@ -108,13 +108,14 @@ void TaskManager::launchWorker(TaskManager* that) {
                         mode = std::ios_base::openmode::_S_ios_openmode_end;
                     }
 
-                    that->threads.emplace_back(p_routineThread<void, const char*, const olstream&>,
-                        &swap_ptr,
-                        databuffer.tme,
-                        that->clock,
-                        funcbuff,
-                        databuffer.args.c_str(),
-                        std::move(olstream(databuffer.output.c_str(), mode))
+                    that->threads.emplace_back(
+                        p_routineThread<void, const std::string&, const olstream&>,
+                        &swap_ptr,                                              // correct
+                        databuffer.tme,                                         // copied
+                        that->clock,                                            // const
+                        funcbuff,                                               // copied
+                        databuffer.args,                                        // copied
+                        std::move(olstream(databuffer.output.c_str(), mode))    // allocates new char buffer
                     );
 
 #ifdef TESTING
@@ -165,17 +166,21 @@ size_t TaskManager::getThreads() {
     return this->threads.size();
 }
 
-void TaskManager::runCommand(const char* message, const olstream& logs) {
-    olstream out(logs);
+void TaskManager::runCommand(const std::string& message, const olstream& logs) {
+    olstream outl(logs);
+    std::ostringstream out;
     StopWatch ptime("Total elapsed time", logs, 0);
-    ((out <<= "Pihost internal command runner initialized. (") <= dateStamp()) < ")\n\n";
 
-    pilib::exec(message, out.open());
+    out << "Pihost internal command runner initialized. (" << dateStamp() << ")\n\n";
 
-    out <= newline <= "Process finished at: " <= dateStamp() < newline;
+    exec(message.c_str(), out);
+
+    out << newline << "Process finished at: " << dateStamp() << newline;
     ptime.end();
+
+    outl << out.str();
 }
-void TaskManager::errorName(const char* message, const olstream& logs) {
+void TaskManager::errorName(const std::string& message, const olstream& logs) {
     olstream out(logs);
     out << withTime("Task name not found\n");
 }

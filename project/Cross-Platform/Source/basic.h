@@ -17,6 +17,9 @@ std::string withTime(const char* message);
 const char* dateStamp();
 const char* dateStamp(time_t* tme);
 
+const char* safeNull(const char* str);
+size_t safeLen(const char* str);
+
 template<typename input>
 void debug(input identifier) {
 	std::cout << dateStamp() << " : DEBUG: " << identifier << newline;

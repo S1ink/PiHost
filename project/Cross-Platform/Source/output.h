@@ -4,6 +4,9 @@
 #include <string>
 #include <fstream>
 
+#include <cstring>
+
+#include "basic.h"
 #include "resources.h"
 
 #define OMODE std::ios::openmode
@@ -12,7 +15,7 @@ private:
 	bool fmode;	//true for file, false for stream
 	std::ofstream file;
 	std::ostream* stream;
-	const char* fname;
+	char* fname;			// make it so that we allocate space for std::string contents, but direct access const char*'s
 	OMODE omodes;
 protected:
 	inline bool checkStream();	//changes stored stream variable to safe one if needed
@@ -25,6 +28,7 @@ public:
 	olstream(std::ostream* stream, const char* file, const OMODE modes = std::ios::out);
 	olstream(const olstream& other);
 	olstream(olstream&& other);
+	~olstream();
 
 	void operator=(const olstream& other);
 	void operator=(olstream&& other);
@@ -58,7 +62,7 @@ public:
 
 	//for more efficient file operations
 	template<typename t>
-	olstream& operator<<=(t item) {	//opens file and doesn't close 
+	olstream& operator<<=(t item) {	//opens file and leaves it open 
 		if (this->fmode) {
 			this->file.open(this->fname, ((this->omodes | std::ios::out) & ~std::ios::in));
 			this->file << item;
@@ -69,7 +73,7 @@ public:
 		return *this;
 	}
 	template<typename t>
-	olstream& operator<=(t item) {	//outputs to open file and doesn't close
+	olstream& operator<=(t item) {	//outputs to open file and leaves it open
 		if ((this->fmode) && this->file.is_open()) {
 			this->file << item;
 		}
@@ -79,7 +83,7 @@ public:
 		return *this;
 	}
 	template<typename t>
-	olstream& operator<(t item) {	//closes file
+	olstream& operator<(t item) {	//outputs to opened file then closes it
 		if (this->fmode && this->file.is_open()) {
 			this->file << item;
 			this->file.close();

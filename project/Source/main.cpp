@@ -1,11 +1,6 @@
-#include <atomic>
-#include <iostream>
-#include <thread>
-
-#include "resources.h"
-#include "output.h"
-#include "timing.h"
-#include "program.h"
+#define INCLUDE_STD
+#define VARS
+#include "pilib.h"
 
 CE_STR t_red = "\033[38;2;255;0;0m";
 CE_STR t_orange = "\033[38;2;255;100;0m";
@@ -16,7 +11,7 @@ CE_STR t_purple = "\033[38;2;150;0;255m";
 CE_STR t_reset = "\033[0m";
 
 std::atomic_bool run = { true };
-StopWatch runtime("Runtime", &std::cout, 0);
+pilib::StopWatch runtime("Runtime", &std::cout, 0);
 //std::atomic_bool run2 = { true };
 
 //static void endCondition() {
@@ -30,7 +25,7 @@ StopWatch runtime("Runtime", &std::cout, 0);
 //	return;
 //}
 
-//lstream logger;
+//pilib::lstream logger;
 
 void inline wait(uint seconds) {
 	std::this_thread::sleep_for(CHRONO::seconds(seconds));
@@ -49,7 +44,7 @@ void on_exit() {
 	runtime.end();
 }
 
-//int of_exec(const char* command, lstream& output) {
+//int of_exec(const char* command, pilib::lstream& output) {
 //	FILE* pipe = popen(command, "r");
 //	if (!pipe) {
 //		output.openOutput();
@@ -114,7 +109,7 @@ void visualUtilization(float utilization) {
 //	protected:
 //		M_Base* env;
 //		
-//		olstream* getBaseStream() {
+//		pilib::olstream* getBaseStream() {
 //			return &(this->env->stream);
 //		}
 //	public:
@@ -126,22 +121,22 @@ void visualUtilization(float utilization) {
 //		}
 //	};
 //
-//	M_Base(const olstream& stream) : stream(stream) {}
-//	M_Base(olstream&& stream) : stream(stream) {}
+//	M_Base(const pilib::olstream& stream) : stream(stream) {}
+//	M_Base(pilib::olstream&& stream) : stream(stream) {}
 //
 //	virtual void t_print(const char* message) = 0;
 //private:
-//	olstream stream;
+//	pilib::olstream stream;
 //};
 //
 //template<typename cont_t = M_Base::C_Base>
 //class M_Test : public M_Base {
 //public:
-//	M_Test(const olstream& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
+//	M_Test(const pilib::olstream& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
 //		this->container = static_cast<const cont_t&>(cont);
 //		this->container.init(this);
 //	}
-//	M_Test(olstream&& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
+//	M_Test(pilib::olstream&& stream, const C_Base& cont = C_Base()) : M_Base(stream) {
 //		this->container = static_cast<const cont_t&>(cont);
 //		this->container.init(this);
 //	}
@@ -169,42 +164,51 @@ void visualUtilization(float utilization) {
 
 std::atomic_bool thr = { true };
 
+void inner1(const pilib::olstream& out) {
+	pilib::olstream output(out);
+	//std::cout << std::this_thread::get_id() << newline;
+
+	//std::this_thread::sleep_for(CHRONO::seconds(1));
+	output.operator<<(pilib::withTime("INNER1- 1 second has passed\n"));
+}
+void inner2(const pilib::olstream& out) {
+	pilib::olstream output(out);
+	//std::cout << std::this_thread::get_id() << newline;
+
+	//std::this_thread::sleep_for(CHRONO::seconds(3));
+	output << pilib::withTime("INNER2- 3 seconds have passed\n");
+}
+
+void outer1(pilib::olstream&& out) {
+	pilib::olstream output(std::move(out));
+	//std::cout << std::this_thread::get_id() << newline;
+
+	std::thread one(pilib::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, const pilib::olstream&>, std::ref(thr), CHRONO::seconds(1), CHRONO::seconds(10), inner1, output);
+	std::thread two(pilib::loopingThread<CHRONO::seconds::rep, CHRONO::seconds::period, void, const pilib::olstream&>, std::ref(thr), CHRONO::seconds(3), CHRONO::seconds(10), inner2, output);
+
+	while (thr) {
+		std::this_thread::sleep_for(CHRONO::seconds(5));
+		output << pilib::withTime("OUTER1- 5 seconds have passed\n");
+	}
+
+	one.join();
+	two.join();
+}
+
 int main(int argc, char* argv[], char* envp[]) {
 	runtime.setStart();
-	progdir.setDir(argv[0]);
+	pilib::progdir.setDir(argv[0]);
 	//std::thread end(endCondition);
 	
 	atexit(on_exit);
-	//sig_handle.setadv();	//update sighandle
-	//sig_handle.setLog("/data/server.txt");
+	//pilib::sig_handle.setadv();	//update sighandle
+	//pilib::sig_handle.setLog("/data/server.txt");
 
-	olstream s1;
-	olstream s2;
-
-	//std::cout << strlen(nullptr) << newline;
-
-	std::cout << safeNull(s1.getPath()) << " : " << safeLen(s1.getPath()) << newline 
-		<< safeNull(s2.getPath()) << " : " << safeLen(s2.getPath()) << "\n\n";
-	//std::cout << "about to copy\n";
-
-	s2 = s1;
-	std::cout << safeNull(s1.getPath()) << " : " << safeLen(s1.getPath()) << newline
-		<< safeNull(s2.getPath()) << " : " << safeLen(s2.getPath()) << "\n\n";
-
-	s1 = olstream("NEW PATH");
-	std::cout << safeNull(s1.getPath()) << " : " << safeLen(s1.getPath()) << newline
-		<< safeNull(s2.getPath()) << " : " << safeLen(s2.getPath()) << "\n\n";
-
-	s2.setStream("ANOTHER NEW PATH");
-	std::cout << safeNull(s1.getPath()) << " : " << safeLen(s1.getPath()) << newline
-		<< safeNull(s2.getPath()) << " : " << safeLen(s2.getPath()) << "\n\n";
-
-	olstream s3(std::move(olstream("/path/to/segv.exe")));
-	std::cout << safeNull(s1.getPath()) << " : " << safeLen(s1.getPath()) << newline
-		<< safeNull(s2.getPath()) << " : " << safeLen(s2.getPath()) << newline
-		<< safeNull(s3.getPath()) << " : " << safeLen(s3.getPath()) << "\n\n";
-
-	//std::cout << word << newline;
+	std::string str = "hello";
+	const char* ptr = str.c_str();
+	std::cout << ptr;
+	str = "world";
+	std::cout << ptr;
 
 	//std::thread main(outer1, &std::cout);
 	
@@ -213,10 +217,10 @@ int main(int argc, char* argv[], char* envp[]) {
 
 	//main.join();
 
-	//http::HttpServer server(&std::cout, nullptr, http::Version::HTTP_1_1, "/data/pihost/resources");
+	//pilib::http::HttpServer server(&std::cout, nullptr, pilib::http::Version::HTTP_1_1, "/data/pihost/resources");
 	//server.serve();
 
-	/*CPU& cpustat = CPU::get();	
+	/*pilib::CPU& cpustat = pilib::CPU::get();	
 	while (1) {
 		std::vector<float> utilization = cpustat.fromReference();
 		visualUtilization(utilization[0]);
