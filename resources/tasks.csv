@@ -1,3 +1,0 @@
-name,output,write,hr,min,sec,args
-apt,/data/logs/apt_log.txt,overwrite,0,0,0, 
-winbackup,/data/logs/winsync.txt,overwrite,16,0,0,/data/pihost/resources/rsyncbackup.csv

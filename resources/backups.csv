@@ -1,5 +1,0 @@
-name,source,destination
-minecraft_java,/windata/Hoodi/AppData/Roaming/.minecraft,/PiSHARE/Backups/Minecraft/java
-minecraft_bedrock,/windata/Hoodi/AppData/Local/Packages/Microsoft.MinecraftUWP_8wekyb3d8bbwe/LocalState/games/com.mojang,/PiSHARE/Backups/Minecraft/bedrock
-subnautica(s),'/windata/Hoodi/AppData/LocalLow/Unknown Worlds',/PiSHARE/Backups/Subnautica
-bravebrowser,/windata/Hoodi/AppData/Local/BraveSoftware/Brave-Browser,/PiSHARE/Backups/BraveBrowser
