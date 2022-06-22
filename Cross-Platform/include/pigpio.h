@@ -27,16 +27,9 @@ For more information, please refer to <http://unlicense.org/>
 #ifndef PIGPIO_H
 #define PIGPIO_H
 
-#ifdef __unix__
-#pragma message "Make sure this header is only used for raspberry pi"
-
 #include <stddef.h>
 #include <stdint.h>
 #include <pthread.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define PIGPIO_VERSION 79
 
@@ -6577,10 +6570,3 @@ after this command is issued.
 
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
-#else
-#pragma message "GPIO is only inteneded for raspberry pi, this header should not be included!"
-#endif

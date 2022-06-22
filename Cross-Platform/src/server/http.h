@@ -9,6 +9,7 @@
 #include "../basic.h"
 #include "../resources.h"
 
+
 //https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol
 
 enum class Version {
@@ -45,28 +46,39 @@ struct Versions {
 private:
 	static const std::unordered_map<std::string, Version> typemap;
 	static const std::unordered_map<Version, std::string> stringmap;
+
 public:
 	static Version getType(const std::string& str);
 	static std::string getString(Version version);
+
+
 };
 struct Methods {
 private:
 	static const std::unordered_map<std::string, Method> typemap;
 	static const std::unordered_map<Method, std::string> stringmap;
+
 public:
 	static Method getType(const std::string& str);
 	static std::string getString(Method method);
+
+
 };
 struct Codes {
 private:
 	static const std::unordered_map<std::string, Code> typemap;
 	static const std::unordered_map<Code, std::string> stringmap;
+
 public:
 	static Code getType(const std::string& str);
 	static Code getType(int code);
 	static std::string getString(Code code);
 	static std::string getString(int code);
+
+
 };
+
+
 
 
 //(header)
@@ -75,6 +87,7 @@ class Segment {
 private:
 	std::string key;
 	std::string value;
+
 public:
 	Segment() = delete;
 	Segment(const std::string& key, const std::string& value) : key(key), value(value) {}
@@ -84,21 +97,25 @@ public:
 	Segment(std::pair<std::string, std::string>&& pair) : key(std::move(pair.first)), value(std::move(pair.second)) {}	//worthless?
 	~Segment() = default;
 
-	std::string* intKey();
-	std::string* intValue();
+	inline std::string* intKey() { return &(this->key); }
+	inline std::string* intValue() { return &(this->value); }
 
-	const std::string& getKey() const;
-	const std::string& getValue() const;
+	inline const std::string& getKey() const { return this->key; }
+	inline const std::string& getValue() const { return this->value; }
 
 	std::string getSerialized() const;
 	static std::string getSerialized(const std::string& key, const std::string& value);
 	static Segment getDeserialized(const std::string& segment);
+
+
 };
 //create inherited classes that define common headers ^
+
 
 class HeaderList {
 private:
 	std::vector<Segment> headers;
+
 public:
 	HeaderList() = default;
 	HeaderList(const std::vector<Segment>& list) : headers(list) {}	//these are so that it will accept std::initializer_list without explicit conversion 
@@ -121,11 +138,15 @@ public:
 	std::string allHeaders() const;
 
 	std::vector<Segment>* intHeaders();
-
 	const std::vector<Segment>& getHeaders() const;
 
 	static std::unordered_map<std::string, std::string> headerMap(const std::vector<Segment>& headers);
+
+
 };
+
+
+
 
 class Request {
 private:
@@ -133,31 +154,39 @@ private:
 	std::string resource;
 	Version version;
 	HeaderList headers;
+	std::string body;
+
 public:
-	Request() = delete;
-	Request(Method method, const std::string& resource, const HeaderList& headers, Version version = Version::HTTP_1_1)
-		: method(method), resource(resource), version(version), headers(headers) {}
+	Request() {}
+	Request(Method method, const std::string& resource, const HeaderList& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1)
+		: method(method), resource(resource), version(version), headers(headers), body(body) {}
 	Request(const std::string& reqest);
-	Request(const Request& other) : method(other.method), resource(other.resource), version(other.version), headers(other.headers) {}
-	Request(Request&& other) : method(other.method), resource(std::move(other.resource)), version(other.version), headers(std::move(other.headers)) {}
+	Request(const Request& other) : method(other.method), resource(other.resource), version(other.version), headers(other.headers), body(other.body) {}
+	Request(Request&& other) : method(other.method), resource(std::move(other.resource)), version(other.version), headers(std::move(other.headers)), body(std::move(other.body)) {}
 	~Request() = default;
 
+	void parse(const std::string& input);
 	std::string getSerialized() const;
 
-	Version* intVersion();
-	Method* intMethod();
-	std::string* intResource();
-	HeaderList* intHeaders();
+	inline Version* intVersion() { return &(this->version); }
+	inline Method* intMethod() { return &(this->method); }
+	inline std::string* intResource() { return &(this->resource); }
+	inline HeaderList* intHeaders() { return &(this->headers); }
+	inline std::string* intBody() { return &(this->body); }
 
-	const Version getVersion() const;
-	const Method getMethod() const;
-	const std::string& getResource() const;
-	const HeaderList& getHeaders() const;
+	inline const Version getVersion() const { return this->version; }
+	inline const Method getMethod() const { return this->method; }
+	inline const std::string& getResource() const { return this->resource; }
+	inline const HeaderList& getHeaders() const { return this->headers; }
+	inline const std::string& getBody() const { return this->body; }
 
-	static std::string getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);	//add overload with {move}
-	static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, Version version = Version::HTTP_1_1);
+	static std::string getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);	//add overload with {move}
+	static void getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);
 	//static (deserialize) {=constructor} methods here?
+
+
 };
+
 
 class Response {
 private:
@@ -165,6 +194,7 @@ private:
 	Version version;
 	HeaderList headers;	//std::map<std::string, std::vector<Segment> > -> for complete RFC standard
 	std::string body;
+
 public:
 	Response() = delete;
 	Response(Version version = Version::HTTP_1_1) : version(version) {}
@@ -179,19 +209,21 @@ public:
 	void update(Code responsecode, HeaderList& headers, const std::string& body = std::string());
 	std::string getSerialized() const;
 
-	Code* intCode();
-	Version* intVersion();
-	std::string* intBody();
-	HeaderList* intHeaders();
+	inline Code* intCode() { return &(this->responsecode); }
+	inline Version* intVersion() { return &(this->version); }
+	inline std::string* intBody() { return &(this->body); }
+	inline HeaderList* intHeaders() { return &(this->headers); }
 
-	const Code getCode() const;
-	const Version getVersion() const;
-	const std::string& getBody() const;
-	const HeaderList& getHeaders() const;
+	inline const Code getCode() const { return this->responsecode; }
+	inline const Version getVersion() const { return this->version; }
+	inline const std::string& getBody() const { return this->body; }
+	inline const HeaderList& getHeaders() const { return this->headers; }
 
-	size_t bodyLen() const;
+	inline size_t bodyLen() const { return this->body.length(); }
 
 	static std::string getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);
 	static void getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body = std::string(), Version version = Version::HTTP_1_1);
 	//static (deserialize) {=constructor} methods here?
+
+
 };

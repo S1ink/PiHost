@@ -33,7 +33,8 @@ extern "C" {
 #ifdef _WIN32 
 #define THREAD_LOCAL __declspec(thread)
 #else
-#define THREAD_LOCAL _Thread_local 
+//#define THREAD_LOCAL _Thread_local 
+#define THREAD_LOCAL thread_local
 #endif 
 
 #define MAX_LINE_SIZE 256 

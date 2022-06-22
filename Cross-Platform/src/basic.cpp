@@ -1,6 +1,6 @@
 #include "basic.h"
 
-uint16_t toNum(char num) {
+uint8_t toNumSafe(char num) {
     if (isdigit(num)) {
         return num - '0';
     }

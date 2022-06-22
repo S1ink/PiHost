@@ -1,3 +1,5 @@
+#ifdef __unix__
+
 #include "gpio.h"
 
 int getStatus() {
@@ -26,3 +28,7 @@ void init(float fanspeed) {
     gpioSetMode(gpin::pi_power, PI_INPUT);
     gpioHardwarePWM(gpin::pi_fan, 25000, (fanspeed * 10000));
 }
+
+#else
+#pragma message "GPIO is only inteneded for raspberry pi, this header should not be included!"
+#endif

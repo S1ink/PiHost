@@ -1,9 +1,10 @@
 #include "http.h"
 
+
 const std::unordered_map<std::string, Version> Versions::typemap = {
-        {"HTTP/1.0", Version::HTTP_1_0},
-        {"HTTP/1.1", Version::HTTP_1_1},
-        {"HTTP/2.0", Version::HTTP_2_0},
+    {"HTTP/1.0", Version::HTTP_1_0},
+    {"HTTP/1.1", Version::HTTP_1_1},
+    {"HTTP/2.0", Version::HTTP_2_0},
 };
 const std::unordered_map<Version, std::string> Versions::stringmap = {
     {Version::HTTP_1_0, "HTTP/1.0"},
@@ -11,19 +12,21 @@ const std::unordered_map<Version, std::string> Versions::stringmap = {
     {Version::HTTP_2_0, "HTTP/2.0"},
 };
 Version Versions::getType(const std::string& str) {
-    auto search = typemap.find(str);
-    if (search != typemap.end()) {
+    auto search = Versions::typemap.find(str);
+    if (search != Versions::typemap.end()) {
         return search->second;
     }
     return Version::ERROR;
 }
 std::string Versions::getString(Version version) {
-    auto search = stringmap.find(version);
-    if (search != stringmap.end()) {
+    auto search = Versions::stringmap.find(version);
+    if (search != Versions::stringmap.end()) {
         return search->second;
     }
     return std::string();
 }
+
+
 const std::unordered_map<std::string, Method> Methods::typemap = {
     {"GET", Method::GET},
     {"HEAD", Method::HEAD},
@@ -47,19 +50,21 @@ const std::unordered_map<Method, std::string> Methods::stringmap = {
     {Method::PATCH, "PATCH"},
 };
 Method Methods::getType(const std::string& str) {
-    auto search = typemap.find(str);
-    if (search != typemap.end()) {
+    auto search = Methods::typemap.find(str);
+    if (search != Methods::typemap.end()) {
         return search->second;
     }
     return Method::ERROR;
 }
 std::string Methods::getString(Method method) {
-    auto search = stringmap.find(method);
-    if (search != stringmap.end()) {
+    auto search = Methods::stringmap.find(method);
+    if (search != Methods::stringmap.end()) {
         return search->second;
     }
     return std::string();
 }
+
+
 const std::unordered_map<std::string, Code> Codes::typemap = {
     {"100 Continue", Code::CONTINUE}, {"200 OK", Code::OK},
     {"201 Created", Code::CREATED}, {"202 Accepted", Code::ACCEPTED},
@@ -120,8 +125,8 @@ Code Codes::getType(const std::string& str) {
         return Code(code);
     }
     else {
-        auto search = typemap.find(str);
-        if (search != typemap.end()) {
+        auto search = Codes::typemap.find(str);
+        if (search != Codes::typemap.end()) {
             return search->second;
         }
         return Code::ERROR;
@@ -131,39 +136,29 @@ Code Codes::getType(int code) { //find a way to check param
     return Code(code);
 }
 std::string Codes::getString(Code code) {
-    auto search = stringmap.find(code);
-    if (search != stringmap.end()) {
+    auto search = Codes::stringmap.find(code);
+    if (search != Codes::stringmap.end()) {
         return search->second;
     }
     return std::string();
 }
 std::string Codes::getString(int code) {
-    auto search = stringmap.find(Code(code));
-    if (search != stringmap.end()) {
+    auto search = Codes::stringmap.find(Code(code));
+    if (search != Codes::stringmap.end()) {
         return search->second;
     }
     return std::to_string(code);
 }
+
+
+
+
 
 Segment::Segment(const std::string& segment) {
     std::istringstream headstream(segment);
     std::getline(headstream, this->key, ':');   //check direct access works
     std::getline(headstream, this->value);
     value.erase(std::remove_if(std::begin(this->value), std::end(this->value), [](char c) {return std::isspace(c); }), std::end(this->value));
-}
-
-std::string* Segment::intKey() {
-    return &(this->key);
-}
-std::string* Segment::intValue() {
-    return &(this->value);
-}
-
-const std::string& Segment::getKey() const {
-    return this->key;
-}
-const std::string& Segment::getValue() const {
-    return this->value;
 }
 
 std::string Segment::getSerialized() const {
@@ -185,6 +180,10 @@ Segment Segment::getDeserialized(const std::string& segment) {
     value.erase(std::remove_if(std::begin(value), std::end(value), [](char c) {return std::isspace(c); }), std::end(value));
     return Segment(std::move(key), std::move(value));
 }
+
+
+
+
 
 HeaderList::HeaderList(const size_t size) {
     this->headers.reserve(size);
@@ -240,7 +239,6 @@ std::string HeaderList::allHeaders() const {
 std::vector<Segment>* HeaderList::intHeaders() {
     return &(this->headers);
 }
-
 const std::vector<Segment>& HeaderList::getHeaders() const {
     return this->headers;
 }
@@ -253,75 +251,70 @@ std::unordered_map<std::string, std::string> HeaderList::headerMap(const std::ve
     return ret;
 }
 
+
+
+
+
 Request::Request(const std::string& request) {
+    this->parse(request);
+}
+
+void Request::parse(const std::string& request) {
     std::istringstream rstream(request);
     std::string buffer;
-    std::getline(rstream, buffer, space);
-    this->method = Methods::getType(buffer);
-    std::getline(rstream, this->resource, space);
-    std::getline(rstream, buffer);
-    clearEnd(buffer);
-    this->version = Versions::getType(buffer);
+    std::getline(rstream, buffer, space);   // parse upto first space
+    this->method = Methods::getType(buffer);    // decode method
+    this->resource.clear();
+    std::getline(rstream, this->resource, space);   // parse resource
+    std::getline(rstream, buffer);  // get rest of line
+    clearEnd(buffer);   // get rid of '/n' or '/r'
+    this->version = Versions::getType(buffer);  // decode version
+    this->headers.reset();
     if ((this->method != Method::ERROR) && (this->version != Version::ERROR)) { //class error var for future reference?
         while (std::getline(rstream, buffer)) {
-            //check for blank line (ex. POST -> deal with the payload)
             clearEnd(buffer);
+            if(buffer.empty()) {
+                break;
+            }
             this->headers.add(buffer);  //IMPLEMENT CHECKS!!!
         }
+        this->body = request.substr(rstream.tellg());
     }
 }
-
 std::string Request::getSerialized() const {
     std::ostringstream buffer;
-    buffer << Methods::getString(this->method)
-        << space << this->resource
-        << space << Versions::getString(this->version)
-        << endline
+    buffer << Methods::getString(this->method) << space << this->resource << space << Versions::getString(this->version) << endline
         << this->headers.allHeaders();
+    if (this->body.length() > 0) {
+        buffer << endline << this->body << endline;
+    }
     return buffer.str();
 }
 
-Version* Request::intVersion() {
-    return &(this->version);
-}
-Method* Request::intMethod() {
-    return &(this->method);
-}
-std::string* Request::intResource() {
-    return &(this->resource);
-}
-HeaderList* Request::intHeaders() {
-    return &(this->headers);
-}
-
-const Version Request::getVersion() const {
-    return this->version;
-}
-const Method Request::getMethod() const {
-    return this->method;
-}
-const std::string& Request::getResource() const {
-    return this->resource;
-}
-const HeaderList& Request::getHeaders() const {
-    return this->headers;
-}
-
-std::string Request::getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, Version version) {
+std::string Request::getSerialized(Method method, const std::string& resource, std::vector<Segment>& headers, const std::string& body, Version version) {
     std::ostringstream buffer;
     buffer << Methods::getString(method) << space << resource << space << Versions::getString(version) << endline;
-    for (uint i = 0; i < headers.size(); i++) {
+    for (size_t i = 0; i < headers.size(); i++) {
         buffer << headers[i].getSerialized() << endline;
+    }
+    if(body.length() > 0) {
+        buffer << endline << body << endline;
     }
     return buffer.str();
 }
-
-void Request::getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, Version version) {
+void Request::getSerialized(std::ostream& buffer, Method method, const std::string& resource, std::vector<Segment>& headers, const std::string& body, Version version) {
     buffer << Methods::getString(method) << space << resource << space << Versions::getString(version) << endline;
     for (uint i = 0; i < headers.size(); i++) {
         buffer << headers[i].getSerialized() << endline;
     }
+    if(body.length() > 0) {
+        buffer << endline << body << endline;
+    }
 }
+
+
+
+
 
 Response::Response(const std::string& response) {   //implement checks when ready to use this form of initialization
     std::istringstream rstream(response);
@@ -354,42 +347,13 @@ void Response::update(Code responsecode, HeaderList& headers, const std::string&
 
 std::string Response::getSerialized() const {
     std::ostringstream buffer;
-    buffer << Versions::getString(this->version) << space << Codes::getString(this->responsecode) << endline;
-    buffer << this->headers.allHeaders();
+    buffer <<
+        Versions::getString(this->version) << space << Codes::getString(this->responsecode) << endline 
+        << this->headers.allHeaders();
     if (this->body.length() > 0) {
         buffer << endline << this->body << endline;
     }
     return buffer.str();
-}
-
-Code* Response::intCode() {
-    return &(this->responsecode);
-}
-Version* Response::intVersion() {
-    return &(this->version);
-}
-std::string* Response::intBody() {
-    return &(this->body);
-}
-HeaderList* Response::intHeaders() {
-    return &(this->headers);
-}
-
-const Code Response::getCode() const {
-    return this->responsecode;
-}
-const Version Response::getVersion() const {
-    return this->version;
-}
-const std::string& Response::getBody() const {
-    return this->body;
-}
-const HeaderList& Response::getHeaders() const {
-    return this->headers;
-}
-
-size_t Response::bodyLen() const {
-    return this->body.length();
 }
 
 std::string Response::getSerialized(Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version) {
@@ -398,7 +362,9 @@ std::string Response::getSerialized(Code responsecode, std::vector<Segment>& hea
     for (uint i = 0; i < headers.size(); i++) {
         buffer << headers[i].getSerialized() << endline;
     }
-    buffer << endline << body << endline;
+    if(body.length() > 0) {
+        buffer << endline << body << endline;
+    }
     return buffer.str();
 }
 void Response::getSerialized(std::ostream& buffer, Code responsecode, std::vector<Segment>& headers, const std::string& body, Version version) {
@@ -406,5 +372,7 @@ void Response::getSerialized(std::ostream& buffer, Code responsecode, std::vecto
     for (uint i = 0; i < headers.size(); i++) {
         buffer << headers[i].getSerialized() << endline;
     }
-    buffer << endline << body << endline;
+    if(body.length() > 0) {
+        buffer << endline << body << endline;
+    }
 }

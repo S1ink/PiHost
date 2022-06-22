@@ -23,10 +23,6 @@
 //	CE_STR mem = "/proc/meminfo";
 //}
 
-//class SYS {
-	//	// all stats here
-	//};
-
 class CPU {
 public:
 	class CoreData {
@@ -44,7 +40,7 @@ public:
 
 		enum {
 			ISMAIN_m = 0b00000001,	// 1 << 0 (first bit represents wheather this core represents total cpu utilization)
-			CORENUM_m = 0b11111110,	// 0xFF & !(1 << 0) (all other bits represent the core num - this means the maximum amount with 8 bits is 128 cores)
+			CORENUM_m = 0b11111110	// 0xFF & !(1 << 0) (all other bits represent the core num - this means the maximum amount with 8 bits is 128 cores)
 		};	
 
 	protected:
@@ -92,6 +88,7 @@ public:
 		uint64_t getState(States state);
 		uint64_t getStates(States states[], size_t size);
 		uint64_t getStates(std::initializer_list<States> states);
+
 	};
 
 	// create a "source" class to wrap the ifstrem -> line finding methods
@@ -177,6 +174,7 @@ private:
 	uint c_cores;
 	Svec reference, buffer;
 	static CE_STR source = "/proc/stat";	// source of info
+
 };
 
 class NET {
